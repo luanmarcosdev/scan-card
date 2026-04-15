@@ -5,7 +5,6 @@ import { ConflictError } from "../errors/conflict.error";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
 import { UserUpdateDto } from "../dtos/user/update-user.dto";
-import { setTimeout } from 'timers/promises';
 import { ICacheProvider } from "../contracts/cache-provider.interface";
 import { formatPhone } from "../utils/phone.validator";
 
@@ -23,8 +22,6 @@ export class UserService {
         if (cachedUsers) {
             return JSON.parse(cachedUsers);
         }
-
-        await setTimeout(2000);
 
         const users = await this.userRepository.get();
 
