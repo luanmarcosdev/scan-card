@@ -11,6 +11,12 @@ jest.mock('timers/promises', () => ({
     setTimeout: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('../../src/services/auth.service', () => ({
+    AuthService: {
+        hashPassword: jest.fn().mockResolvedValue('hashed_password'),
+    },
+}));
+
 const mockUser: User = {
     id: 'uuid-abc-123',
     name: 'Luan Arruda',
@@ -169,7 +175,7 @@ describe("UserService", () => {
 
             expect(userRepository.update).toHaveBeenCalledWith('uuid-abc-123', {
                 name: undefined,
-                password: 'NewPass1!',
+                password: 'hashed_password',
                 salary: undefined,
             });
         });

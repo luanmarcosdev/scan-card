@@ -7,6 +7,7 @@ import { BadRequestError } from "../errors/bad-request.error";
 import { UserUpdateDto } from "../dtos/user/update-user.dto";
 import { ICacheProvider } from "../contracts/cache-provider.interface";
 import { formatPhone } from "../utils/phone.validator";
+import { AuthService } from "./auth.service";
 
 export class UserService {
 
@@ -42,6 +43,7 @@ export class UserService {
         }
 
         data.phone = formatPhone(data.phone);
+        data.password = await AuthService.hashPassword(data.password);
         const user = await this.userRepository.create(data);
 
         await this.cacheProvider.del('users:all');
@@ -84,7 +86,7 @@ export class UserService {
 
         const dataToUpdate: UserUpdateDto = {
             name: data.name,
-            password: data.password,
+            password: data.password ? await AuthService.hashPassword(data.password) : undefined,
             salary: data.salary,
         };
 

@@ -24,7 +24,7 @@ export class User {
     @Column({ length: 50 })
     document!: string;
 
-    @Column({ length: 20 })
+    @Column({ length: 60 })
     password!: string;
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: null })
