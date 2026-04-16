@@ -10,7 +10,7 @@ export class ExpenseCategoryRepositoryMySQL implements IExpenseCategoryRepositor
     private repo = AppDataSource.getRepository(ExpenseCategory);
 
     async findAll(userId: string): Promise<ExpenseCategory[]> {
-        return this.repo.findBy({ user_id: userId });
+        return this.repo.find({ where: { user_id: userId }, order: { category: 'ASC' } });
     }
 
     async findById(id: string): Promise<ExpenseCategory | null> {
