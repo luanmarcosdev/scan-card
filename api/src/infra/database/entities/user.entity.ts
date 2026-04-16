@@ -21,7 +21,7 @@ export class User {
     email!: string;
 
     @Index()
-    @Column({ length: 50 })
+    @Column({ length: 11 })
     document!: string;
 
     @Column({ length: 60 })

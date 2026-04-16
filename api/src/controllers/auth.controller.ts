@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { validate } from "class-validator";
 import { LoginDto } from "../dtos/auth/login.dto";
-import { UserCreateDto } from "../dtos/user/create-user.dto";
+import { RegisterDto } from "../dtos/auth/register.dto";
 import { BadRequestError } from "../errors/bad-request.error";
 import { AuthService } from "../services/auth.service";
 import { UserRepositoryMySQL } from "../repositories/user.repository.mysql";
@@ -18,7 +18,7 @@ export class AuthController {
 
     async register(req: Request, res: Response, next: NextFunction) {
         try {
-            const dto = Object.assign(new UserCreateDto(), req.body);
+            const dto = Object.assign(new RegisterDto(), req.body);
             const errors = await validate(dto);
 
             if (errors.length) {

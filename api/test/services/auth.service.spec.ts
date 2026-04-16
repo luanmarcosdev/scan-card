@@ -3,7 +3,7 @@ import { IUserRepository } from "../../src/contracts/user-repository.interface";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 import { UnauthorizedError } from "../../src/errors/unauthorized.error";
 import { ConflictError } from "../../src/errors/conflict.error";
-import { UserCreateDto } from "../../src/dtos/user/create-user.dto";
+import { RegisterDto } from "../../src/dtos/auth/register.dto";
 import { User } from "../../src/infra/database/entities/user.entity";
 
 process.env.JWT_SECRET = 'test-secret';
@@ -40,7 +40,7 @@ const mockTokenResponse = {
     accessToken: 'mock.jwt.token',
 };
 
-const registerDto: UserCreateDto = {
+const registerDto: RegisterDto = {
     name: 'Luan Arruda',
     email: 'luan@test.com',
     document: '103.164.036-36',

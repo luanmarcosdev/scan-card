@@ -1,7 +1,7 @@
 import { AppDataSource } from '../infra/database/data-source';
 import { User } from '../infra/database/entities/user.entity';
 import { IUserRepository } from '../contracts/user-repository.interface';
-import { UserCreateDto } from "../dtos/user/create-user.dto";
+import { RegisterDto } from "../dtos/auth/register.dto";
 import { NotFoundError } from '../errors/not-found.error';
 import { UserUpdateDto } from '../dtos/user/update-user.dto';
 
@@ -17,7 +17,7 @@ export class UserRepositoryMySQL implements IUserRepository {
         return await this.UserRepositoryORM.findOneBy({ email });
     }
 
-    async create(userData: UserCreateDto): Promise<User> {
+    async create(userData: RegisterDto): Promise<User> {
         return await this.UserRepositoryORM.save(userData);
     }
 

@@ -3,7 +3,7 @@ import jsonwebtoken from "jsonwebtoken";
 import { IUserRepository } from "../contracts/user-repository.interface";
 import { ICacheProvider } from "../contracts/cache-provider.interface";
 import { LoginDto } from "../dtos/auth/login.dto";
-import { UserCreateDto } from "../dtos/user/create-user.dto";
+import { RegisterDto } from "../dtos/auth/register.dto";
 import { User } from "../infra/database/entities/user.entity";
 import { ConflictError } from "../errors/conflict.error";
 import { UnauthorizedError } from "../errors/unauthorized.error";
@@ -25,7 +25,7 @@ export class AuthService {
         private readonly cacheProvider: ICacheProvider,
     ) {}
 
-    async register(data: UserCreateDto): Promise<User> {
+    async register(data: RegisterDto): Promise<User> {
         const existingUser = await this.userRepository.findByEmail(data.email);
 
         if (existingUser) {

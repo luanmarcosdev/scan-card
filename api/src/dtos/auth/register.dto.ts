@@ -2,7 +2,7 @@ import { IsEmail, IsNumber, IsOptional, IsString, Matches, Min } from "class-val
 import { IsCpf } from "../../utils/cpf.validator";
 import { IsPhone } from "../../utils/phone.validator";
 
-export class UserCreateDto {
+export class RegisterDto {
     @IsString()
     name!: string;
 
