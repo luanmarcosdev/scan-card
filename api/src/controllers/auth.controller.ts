@@ -4,15 +4,17 @@ import { LoginDto } from "../dtos/auth/login.dto";
 import { RegisterDto } from "../dtos/auth/register.dto";
 import { BadRequestError } from "../errors/bad-request.error";
 import { AuthService } from "../services/auth.service";
+import { ExpenseCategoryService } from "../services/expense-category.service";
 import { UserRepositoryMySQL } from "../repositories/user.repository.mysql";
+import { ExpenseCategoryRepositoryMySQL } from "../repositories/expense-category.repository.mysql";
 import { RedisCacheProvider } from "../infra/cache/redis-cache.provider";
 import { userToUserResponseDto } from "../mappers/user.mapper";
 import { IResponse } from "../dtos/success-response.dto";
 import { UserResponseDto } from "../dtos/user/response-user.dto";
 
-const repository = new UserRepositoryMySQL();
 const cacheProvider = new RedisCacheProvider();
-const service = new AuthService(repository, cacheProvider);
+const authService = new AuthService(new UserRepositoryMySQL(), cacheProvider);
+const expenseCategoryService = new ExpenseCategoryService(new ExpenseCategoryRepositoryMySQL(), cacheProvider);
 
 export class AuthController {
 
@@ -25,11 +27,13 @@ export class AuthController {
                 throw new BadRequestError({ message: "Validation failed", errors });
             }
 
-            const result = await service.register(dto);
+            const user = await authService.register(dto);
+            await expenseCategoryService.createDefaults(user.id);
+
             const response: IResponse<UserResponseDto> = {
                 status: 201,
                 message: "User created successfully",
-                data: userToUserResponseDto(result),
+                data: userToUserResponseDto(user),
             };
 
             res.status(201).json(response);
@@ -48,7 +52,7 @@ export class AuthController {
                 throw new BadRequestError({ message: "Validation failed", errors });
             }
 
-            const result = await service.login(dto);
+            const result = await authService.login(dto);
 
             res.status(200).json(result);
         } catch (error) {
