@@ -9,10 +9,6 @@ export class UserRepositoryMySQL implements IUserRepository {
 
     private UserRepositoryORM = AppDataSource.getRepository(User);
 
-    async get(): Promise<User[]> {
-        return await this.UserRepositoryORM.find();
-    }
-
     async findById(id: string): Promise<User | null> {
         return await this.UserRepositoryORM.findOneBy({ id });
     }

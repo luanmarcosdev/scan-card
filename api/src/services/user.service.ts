@@ -16,25 +16,6 @@ export class UserService {
         private readonly cacheProvider: ICacheProvider
     ) {}
 
-    async get(): Promise<User[]> {
-        const cacheKey = 'users:all';
-        const cachedUsers = await this.cacheProvider.get(cacheKey);
-
-        if (cachedUsers) {
-            return JSON.parse(cachedUsers);
-        }
-
-        const users = await this.userRepository.get();
-
-        if (!users || users.length === 0) {
-            throw new NotFoundError({ message: "No users found" });
-        }
-
-        await this.cacheProvider.set(cacheKey, JSON.stringify(users), 120);
-
-        return users;
-    }
-
     async create(data: UserCreateDto): Promise<User> {
         const existingUser = await this.userRepository.findByEmail(data.email);
 

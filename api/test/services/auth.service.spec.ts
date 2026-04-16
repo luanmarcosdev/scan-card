@@ -47,7 +47,6 @@ describe("AuthService", () => {
         jest.clearAllMocks();
 
         userRepository = {
-            get: jest.fn(),
             findByEmail: jest.fn(),
             create: jest.fn(),
             findById: jest.fn(),

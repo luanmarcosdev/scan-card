@@ -7,10 +7,6 @@ import { UserCreateDto } from "../../src/dtos/user/create-user.dto";
 import { User } from "../../src/infra/database/entities/user.entity";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 
-jest.mock('timers/promises', () => ({
-    setTimeout: jest.fn().mockResolvedValue(undefined),
-}));
-
 jest.mock('../../src/services/auth.service', () => ({
     AuthService: {
         hashPassword: jest.fn().mockResolvedValue('hashed_password'),
@@ -47,7 +43,6 @@ describe("UserService", () => {
         jest.clearAllMocks();
 
         userRepository = {
-            get: jest.fn(),
             findByEmail: jest.fn(),
             create: jest.fn(),
             findById: jest.fn(),
@@ -62,39 +57,6 @@ describe("UserService", () => {
         };
 
         userService = new UserService(userRepository, cacheProvider);
-    });
-
-    describe("get", () => {
-        it("should return cached users on cache hit without calling DB", async () => {
-            cacheProvider.get.mockResolvedValue(JSON.stringify([mockUser]));
-
-            const result = await userService.get();
-
-            expect(result).toHaveLength(1);
-            expect(result[0].id).toBe(mockUser.id);
-            expect(userRepository.get).not.toHaveBeenCalled();
-            expect(cacheProvider.get).toHaveBeenCalledWith('users:all');
-        });
-
-        it("should fetch from DB on cache miss and cache the result", async () => {
-            cacheProvider.get.mockResolvedValue(null);
-            userRepository.get.mockResolvedValue([mockUser]);
-
-            const result = await userService.get();
-
-            expect(result).toHaveLength(1);
-            expect(result).toEqual([mockUser]);
-            expect(userRepository.get).toHaveBeenCalledTimes(1);
-            expect(cacheProvider.set).toHaveBeenCalledWith('users:all', JSON.stringify([mockUser]), 120);
-        });
-
-        it("should throw NotFoundError if no users exist", async () => {
-            cacheProvider.get.mockResolvedValue(null);
-            userRepository.get.mockResolvedValue([]);
-
-            await expect(userService.get()).rejects.toBeInstanceOf(NotFoundError);
-            expect(cacheProvider.set).not.toHaveBeenCalled();
-        });
     });
 
     describe("create", () => {
