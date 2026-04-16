@@ -1,7 +1,6 @@
 import { UserRepositoryMySQL } from '../repositories/user.repository.mysql';
 import { UserService } from '../services/user.service';
 import { Request, Response, NextFunction } from 'express';
-import { UserCreateDto } from "../dtos/user/create-user.dto";
 import { validate } from "class-validator";
 import { IResponse } from '../dtos/success-response.dto';
 import { UserResponseDto } from '../dtos/user/response-user.dto';
@@ -15,28 +14,6 @@ const cacheProvider = new RedisCacheProvider();
 const service = new UserService(repository, cacheProvider);
 
 export class UserController {
-
-    async createUser(req: Request, res: Response, next: NextFunction) {
-        try {
-            const dto = Object.assign(new UserCreateDto(), req.body);
-            const errors = await validate(dto);
-
-            if (errors.length) {
-                throw new BadRequestError({ message: 'Validation failed', errors });
-            }
-
-            const result = await service.create(dto);
-            const response: IResponse<UserResponseDto> = {
-                status: 201,
-                message: 'User created successfully',
-                data: userToUserResponseDto(result)
-            };
-
-            res.status(201).json(response);
-        } catch (error) {
-            next(error);
-        }
-    }
 
     async findUser(req: Request, res: Response, next: NextFunction) {
         try {

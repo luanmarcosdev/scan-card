@@ -3,7 +3,11 @@ import jsonwebtoken from "jsonwebtoken";
 import { IUserRepository } from "../contracts/user-repository.interface";
 import { ICacheProvider } from "../contracts/cache-provider.interface";
 import { LoginDto } from "../dtos/auth/login.dto";
+import { UserCreateDto } from "../dtos/user/create-user.dto";
+import { User } from "../infra/database/entities/user.entity";
+import { ConflictError } from "../errors/conflict.error";
 import { UnauthorizedError } from "../errors/unauthorized.error";
+import { formatPhone } from "../utils/phone.validator";
 
 const SALT_ROUNDS = 10;
 
@@ -20,6 +24,19 @@ export class AuthService {
         private readonly userRepository: IUserRepository,
         private readonly cacheProvider: ICacheProvider,
     ) {}
+
+    async register(data: UserCreateDto): Promise<User> {
+        const existingUser = await this.userRepository.findByEmail(data.email);
+
+        if (existingUser) {
+            throw new ConflictError({ message: "Email already in use" });
+        }
+
+        data.phone = formatPhone(data.phone);
+        data.password = await AuthService.hashPassword(data.password);
+
+        return this.userRepository.create(data);
+    }
 
     async login(data: LoginDto) {
         const user = await this.userRepository.findByEmail(data.email);

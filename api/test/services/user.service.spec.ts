@@ -1,9 +1,7 @@
 import { UserService } from "../../src/services/user.service";
 import { IUserRepository } from "../../src/contracts/user-repository.interface";
-import { ConflictError } from "../../src/errors/conflict.error";
 import { NotFoundError } from "../../src/errors/not-found.error";
 import { BadRequestError } from "../../src/errors/bad-request.error";
-import { UserCreateDto } from "../../src/dtos/user/create-user.dto";
 import { User } from "../../src/infra/database/entities/user.entity";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 
@@ -24,14 +22,6 @@ const mockUser: User = {
     created_at: new Date('2026-01-01'),
     updated_at: null,
     deleted_at: null,
-};
-
-const createDto: UserCreateDto = {
-    name: 'Luan Arruda',
-    email: 'luan@test.com',
-    document: '103.164.036-36',
-    password: 'Luan123!',
-    phone: '32999093190',
 };
 
 describe("UserService", () => {
@@ -57,29 +47,6 @@ describe("UserService", () => {
         };
 
         userService = new UserService(userRepository, cacheProvider);
-    });
-
-    describe("create", () => {
-        it("should create user and format phone before saving", async () => {
-            userRepository.findByEmail.mockResolvedValue(null);
-            userRepository.create.mockResolvedValue(mockUser);
-
-            const result = await userService.create({ ...createDto });
-
-            expect(result).toEqual(mockUser);
-            expect(userRepository.create).toHaveBeenCalledTimes(1);
-            expect(userRepository.create).toHaveBeenCalledWith(
-                expect.objectContaining({ phone: '32-99909-3190' })
-            );
-            expect(cacheProvider.del).toHaveBeenCalledWith('users:all');
-        });
-
-        it("should throw ConflictError if email already exists", async () => {
-            userRepository.findByEmail.mockResolvedValue(mockUser);
-
-            await expect(userService.create({ ...createDto })).rejects.toBeInstanceOf(ConflictError);
-            expect(userRepository.create).not.toHaveBeenCalled();
-        });
     });
 
     describe("findById", () => {
@@ -125,7 +92,6 @@ describe("UserService", () => {
                 password: undefined,
                 salary: undefined,
             });
-            expect(cacheProvider.del).toHaveBeenCalledWith('users:all');
             expect(cacheProvider.del).toHaveBeenCalledWith('users:uuid-abc-123');
         });
 
@@ -181,7 +147,6 @@ describe("UserService", () => {
             await userService.delete('uuid-abc-123');
 
             expect(userRepository.delete).toHaveBeenCalledWith('uuid-abc-123');
-            expect(cacheProvider.del).toHaveBeenCalledWith('users:all');
             expect(cacheProvider.del).toHaveBeenCalledWith('users:uuid-abc-123');
         });
 

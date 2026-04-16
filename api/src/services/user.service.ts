@@ -1,12 +1,9 @@
 import { User } from "../infra/database/entities/user.entity";
 import { IUserRepository } from "../contracts/user-repository.interface";
-import { UserCreateDto } from "../dtos/user/create-user.dto";
-import { ConflictError } from "../errors/conflict.error";
 import { NotFoundError } from "../errors/not-found.error";
 import { BadRequestError } from "../errors/bad-request.error";
 import { UserUpdateDto } from "../dtos/user/update-user.dto";
 import { ICacheProvider } from "../contracts/cache-provider.interface";
-import { formatPhone } from "../utils/phone.validator";
 import { AuthService } from "./auth.service";
 
 export class UserService {
@@ -15,22 +12,6 @@ export class UserService {
         private readonly userRepository: IUserRepository,
         private readonly cacheProvider: ICacheProvider
     ) {}
-
-    async create(data: UserCreateDto): Promise<User> {
-        const existingUser = await this.userRepository.findByEmail(data.email);
-
-        if (existingUser) {
-            throw new ConflictError({ message: "Email already in use" });
-        }
-
-        data.phone = formatPhone(data.phone);
-        data.password = await AuthService.hashPassword(data.password);
-        const user = await this.userRepository.create(data);
-
-        await this.cacheProvider.del('users:all');
-
-        return user;
-    }
 
     async findById(id: string): Promise<User> {
         const cachedKey = `users:${id}`;
@@ -77,7 +58,6 @@ export class UserService {
             throw new NotFoundError({ message: "User not found to update" });
         }
 
-        this.cacheProvider.del('users:all');
         this.cacheProvider.del(`users:${id}`);
 
         return updatedUser;
@@ -91,7 +71,6 @@ export class UserService {
         }
 
         await this.userRepository.delete(id);
-        await this.cacheProvider.del('users:all');
         await this.cacheProvider.del(`users:${id}`);
     }
 }

@@ -2,6 +2,8 @@ import { AuthService } from "../../src/services/auth.service";
 import { IUserRepository } from "../../src/contracts/user-repository.interface";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 import { UnauthorizedError } from "../../src/errors/unauthorized.error";
+import { ConflictError } from "../../src/errors/conflict.error";
+import { UserCreateDto } from "../../src/dtos/user/create-user.dto";
 import { User } from "../../src/infra/database/entities/user.entity";
 
 process.env.JWT_SECRET = 'test-secret';
@@ -38,6 +40,14 @@ const mockTokenResponse = {
     accessToken: 'mock.jwt.token',
 };
 
+const registerDto: UserCreateDto = {
+    name: 'Luan Arruda',
+    email: 'luan@test.com',
+    document: '103.164.036-36',
+    password: 'Luan123!',
+    phone: '32999093190',
+};
+
 describe("AuthService", () => {
     let authService: AuthService;
     let userRepository: jest.Mocked<IUserRepository>;
@@ -61,6 +71,30 @@ describe("AuthService", () => {
         };
 
         authService = new AuthService(userRepository, cacheProvider);
+    });
+
+    describe("register", () => {
+        it("should create user with formatted phone and hashed password", async () => {
+            userRepository.findByEmail.mockResolvedValue(null);
+            userRepository.create.mockResolvedValue(mockUser);
+
+            const result = await authService.register({ ...registerDto });
+
+            expect(result).toEqual(mockUser);
+            expect(userRepository.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    phone: '32-99909-3190',
+                    password: 'hashed_password',
+                })
+            );
+        });
+
+        it("should throw ConflictError if email already exists", async () => {
+            userRepository.findByEmail.mockResolvedValue(mockUser);
+
+            await expect(authService.register({ ...registerDto })).rejects.toBeInstanceOf(ConflictError);
+            expect(userRepository.create).not.toHaveBeenCalled();
+        });
     });
 
     describe("login", () => {
