@@ -37,18 +37,34 @@ This is a TypeScript/Express REST API with MySQL (TypeORM), Redis caching, and R
 Routes → Controllers → Services → Repositories → Database/Cache
 ```
 
-- **`src/contracts/`** — Interfaces for repositories and cache provider (dependency inversion)
+- **`src/contracts/`** — Interfaces for repositories, cache, and storage providers (dependency inversion)
 - **`src/repositories/`** — TypeORM implementations of repository interfaces
-- **`src/services/`** — Business logic; receives repository and cache contracts via constructor
-- **`src/controllers/`** — Express handlers; validates DTOs, calls services, formats responses
-- **`src/dtos/`** — class-validator decorated input shapes
+- **`src/services/`** — Business logic; receives repository, cache, and storage contracts via constructor
+- **`src/controllers/`** — Express handlers; validates DTOs via `plainToClass` + `validate`, calls services, formats responses
+- **`src/dtos/`** — class-validator decorated input shapes; use `@Transform` for fields that arrive as strings from multipart/form-data
 - **`src/mappers/`** — Entity-to-DTO conversions
 - **`src/errors/`** — Custom error classes (`ErrorBase`, `NotFoundError`, `ConflictError`, `BadRequestError`) caught by the global error middleware
-- **`src/infra/`** — Redis and RabbitMQ client wrappers
+- **`src/infra/`** — Redis, RabbitMQ, and storage client wrappers
+- **`src/infra/storage/`** — `LocalStorageProvider` implements `IStorageProvider`; saves files to `uploads/{userId}/{statementId}/`; swap for MinIO later without changing services
+- **`src/middlewares/upload.middleware.ts`** — multer with `memoryStorage`; fileFilter accepts only jpg/jpeg/png; field name is `images` (array)
 - **`src/workers/`** — RabbitMQ consumer processes (separate entry points)
-- **`src/database/`** — TypeORM data source config, entities, and migrations
+- **`src/infra/database/`** — TypeORM data source config, entities, and migrations
 
 **Worker pattern:** Workers run as separate processes (`src/workers/`). The RabbitMQ consumer includes built-in retry logic (configurable max retries + delay) and a Dead Letter Queue for exhausted retries.
+
+**card_statements flow:**
+- `POST /api/card-statements` — multipart/form-data with fields `card_id`, `year_reference`, `month_reference`, `total` (optional) + files under key `images`
+- Creates statement (status=pending), saves images to disk, creates `card_statement_images` records, updates status to `sent`, publishes `{ statementId }` to exchange `statements` routing key `process`
+- Returns 202 Accepted
+- Worker (passo 6 — not yet implemented) consumes, calls LLM, saves to `card_transactions`, updates status to `success` or `needs_review`
+
+**processing_status reference table (no CRUD):**
+```
+1=pending, 2=sent, 3=processing, 4=success, 5=retry, 6=dlq, 7=needs_review
+```
+Delete allowed only on status: 1, 4, 6.
+
+**DECIMAL columns:** TypeORM returns MySQL DECIMAL as string by default. Use column `transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null }` to get numbers.
 
 **Environment variables** (see `.env.example`):
 ```
@@ -60,4 +76,4 @@ TypeORM `synchronize` is disabled — all schema changes must go through migrati
 
 ## Testing
 
-Tests live in `/test/` (mirroring `src/` structure) and use `.spec.ts` suffix. Services are unit tested with mocked repositories and cache providers. Path alias `@/` maps to `src/`.
+Tests live in `/test/` (mirroring `src/` structure) and use `.spec.ts` suffix. Services are unit tested with mocked repositories, cache providers, and storage providers. Path alias `@/` maps to `src/`.
