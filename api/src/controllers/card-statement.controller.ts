@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { validate } from "class-validator";
+import { plainToClass } from "class-transformer";
 import { CardStatementService } from "../services/card-statement.service";
 import { CardStatementRepositoryMySQL } from "../repositories/card-statement.repository.mysql";
 import { CardStatementImageRepositoryMySQL } from "../repositories/card-statement-image.repository.mysql";
@@ -52,14 +53,13 @@ export class CardStatementController {
 
     async create(req: Request, res: Response, next: NextFunction) {
         try {
-            const dto = Object.assign(new CreateCardStatementDto(), req.body);
+            const dto = plainToClass(CreateCardStatementDto, req.body);
             const errors = await validate(dto);
 
             if (errors.length) {
                 throw new BadRequestError({ message: 'Validation failed', errors });
             }
 
-            // passo 5: req.files preenchido pelo multer (memoryStorage)
             const files = (req.files as Express.Multer.File[] || []).map((f) => ({
                 filename: f.originalname,
                 buffer: f.buffer,

@@ -31,7 +31,14 @@ export class CardStatement {
     @Column({ name: 'month_reference', type: 'int' })
     month_reference!: number;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: null })
+    @Column({
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        nullable: true,
+        default: null,
+        transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null },
+    })
     total!: number | null;
 
     @CreateDateColumn()
