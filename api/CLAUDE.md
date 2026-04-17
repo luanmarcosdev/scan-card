@@ -66,6 +66,16 @@ Delete allowed only on status: 1, 4, 6.
 
 **DECIMAL columns:** TypeORM returns MySQL DECIMAL as string by default. Use column `transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null }` to get numbers.
 
+## Known Technical Debt
+
+- **Rotas nao aninhadas** — `card_statements` e `card_transactions` deveriam ser subrecursos:
+  ```
+  GET /api/cards/:cardId/statements
+  GET /api/cards/:cardId/statements/:id
+  GET /api/cards/:cardId/statements/:statementId/transactions
+  ```
+  Atualmente as rotas sao standalone (`/api/card-statements`), o que nao reflete a dependencia semantica entre os recursos. Refatorar antes de expor a API publicamente.
+
 **Environment variables** (see `.env.example`):
 ```
 PORT, DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME,
