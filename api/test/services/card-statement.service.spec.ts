@@ -153,6 +153,16 @@ describe("CardStatementService", () => {
 
             expect(statementRepository.create).not.toHaveBeenCalled();
         });
+
+        it("should throw BadRequestError if file has invalid extension", async () => {
+            const invalidFiles = [{ filename: 'fatura.pdf', buffer: Buffer.from('pdf') }];
+
+            await expect(
+                service.create('user-uuid-123', { card_id: 'card-uuid-123', year_reference: 2026, month_reference: 4 }, invalidFiles)
+            ).rejects.toBeInstanceOf(BadRequestError);
+
+            expect(statementRepository.create).not.toHaveBeenCalled();
+        });
     });
 
     describe("update", () => {

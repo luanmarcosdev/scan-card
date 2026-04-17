@@ -17,6 +17,8 @@ export interface ImageFile {
 // 1 = pending, 4 = success, 6 = dlq: nao ha processamento ativo nem dados sendo gerados
 const DELETABLE_STATUSES = [1, 4, 6];
 
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
+
 export class CardStatementService {
 
     constructor(
@@ -59,6 +61,18 @@ export class CardStatementService {
     async create(userId: string, data: CreateCardStatementDto, files: ImageFile[]): Promise<CardStatement> {
         if (!files || files.length === 0) {
             throw new BadRequestError({ message: 'At least one image is required' });
+        }
+
+        const invalidFiles = files.filter((f) => {
+            const ext = f.filename.split('.').pop()?.toLowerCase();
+            return !ext || !ALLOWED_EXTENSIONS.includes(ext);
+        });
+
+        if (invalidFiles.length > 0) {
+            throw new BadRequestError({
+                message: 'Invalid file type',
+                errors: { allowed: `only ${ALLOWED_EXTENSIONS.join(', ')} are accepted` },
+            });
         }
 
         const statement = await this.statementRepository.create(data, userId);
