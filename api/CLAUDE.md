@@ -53,7 +53,7 @@ Routes → Controllers → Services → Repositories → Database/Cache
 **Worker pattern:** Workers run as separate processes (`src/workers/`). The RabbitMQ consumer includes built-in retry logic (configurable max retries + delay) and a Dead Letter Queue for exhausted retries.
 
 **card_statements flow:**
-- `POST /api/card-statements` — multipart/form-data with fields `card_id`, `year_reference`, `month_reference`, `total` (optional) + files under key `images`
+- `POST /api/cards/:cardId/statements` — multipart/form-data with fields `year_reference`, `month_reference`, `total` (optional) + files under key `images`
 - Creates statement (status=pending), saves images to disk, creates `card_statement_images` records, updates status to `sent`, publishes `{ statementId }` to exchange `statements` routing key `process`
 - Returns 202 Accepted
 - Worker (passo 6 — not yet implemented) consumes, calls LLM, saves to `card_transactions`, updates status to `success` or `needs_review`
@@ -65,16 +65,6 @@ Routes → Controllers → Services → Repositories → Database/Cache
 Delete allowed only on status: 1, 4, 6.
 
 **DECIMAL columns:** TypeORM returns MySQL DECIMAL as string by default. Use column `transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null }` to get numbers.
-
-## Known Technical Debt
-
-- **Rotas nao aninhadas** — `card_statements` e `card_transactions` deveriam ser subrecursos:
-  ```
-  GET /api/cards/:cardId/statements
-  GET /api/cards/:cardId/statements/:id
-  GET /api/cards/:cardId/statements/:statementId/transactions
-  ```
-  Atualmente as rotas sao standalone (`/api/card-statements`), o que nao reflete a dependencia semantica entre os recursos. Refatorar antes de expor a API publicamente.
 
 **Environment variables** (see `.env.example`):
 ```
