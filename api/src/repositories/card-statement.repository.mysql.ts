@@ -9,8 +9,8 @@ export class CardStatementRepositoryMySQL implements ICardStatementRepository {
 
     private repo = AppDataSource.getRepository(CardStatement);
 
-    async findAll(userId: string): Promise<CardStatement[]> {
-        return this.repo.find({ where: { user_id: userId }, order: { created_at: 'DESC' } });
+    async findAll(userId: string, cardId: string): Promise<CardStatement[]> {
+        return this.repo.find({ where: { user_id: userId, card_id: cardId }, order: { created_at: 'DESC' } });
     }
 
     async findById(id: string): Promise<CardStatement | null> {
@@ -21,8 +21,8 @@ export class CardStatementRepositoryMySQL implements ICardStatementRepository {
         return this.repo.findOneBy({ id, user_id: userId });
     }
 
-    async create(data: CreateCardStatementDto, userId: string): Promise<CardStatement> {
-        return this.repo.save({ ...data, user_id: userId });
+    async create(data: CreateCardStatementDto, userId: string, cardId: string): Promise<CardStatement> {
+        return this.repo.save({ ...data, user_id: userId, card_id: cardId });
     }
 
     async update(id: string, data: UpdateCardStatementDto): Promise<CardStatement | null> {

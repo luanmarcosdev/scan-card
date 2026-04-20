@@ -69,7 +69,7 @@ describe("CardStatementService", () => {
         it("should return cached statements on cache hit", async () => {
             cacheProvider.get.mockResolvedValue(JSON.stringify([mockStatement]));
 
-            const result = await service.findAll('user-uuid-123');
+            const result = await service.findAll('user-uuid-123', 'card-uuid-123');
 
             expect(result[0].id).toBe(mockStatement.id);
             expect(statementRepository.findAll).not.toHaveBeenCalled();
@@ -79,11 +79,11 @@ describe("CardStatementService", () => {
             cacheProvider.get.mockResolvedValue(null);
             statementRepository.findAll.mockResolvedValue([mockStatement]);
 
-            const result = await service.findAll('user-uuid-123');
+            const result = await service.findAll('user-uuid-123', 'card-uuid-123');
 
             expect(result).toEqual([mockStatement]);
             expect(cacheProvider.set).toHaveBeenCalledWith(
-                'card_statements:user-uuid-123:all',
+                'card_statements:card-uuid-123:all',
                 JSON.stringify([mockStatement]),
                 120
             );
@@ -129,8 +129,7 @@ describe("CardStatementService", () => {
                 .mockResolvedValueOnce('/uploads/user-uuid-123/stmt-uuid-123/fatura.jpg')
                 .mockResolvedValueOnce('/uploads/user-uuid-123/stmt-uuid-123/fatura2.jpg');
 
-            const result = await service.create('user-uuid-123', {
-                card_id: 'card-uuid-123',
+            const result = await service.create('user-uuid-123', 'card-uuid-123', {
                 year_reference: 2026,
                 month_reference: 4,
                 total: 1500,
@@ -143,12 +142,12 @@ describe("CardStatementService", () => {
                 { card_statement_id: 'stmt-uuid-123', image_path: '/uploads/user-uuid-123/stmt-uuid-123/fatura2.jpg' },
             ]);
             expect(statementRepository.updateStatus).toHaveBeenCalledWith('stmt-uuid-123', 2);
-            expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:user-uuid-123:all');
+            expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:card-uuid-123:all');
         });
 
         it("should throw BadRequestError if no files provided", async () => {
             await expect(
-                service.create('user-uuid-123', { card_id: 'card-uuid-123', year_reference: 2026, month_reference: 4 }, [])
+                service.create('user-uuid-123', 'card-uuid-123', { year_reference: 2026, month_reference: 4 }, [])
             ).rejects.toBeInstanceOf(BadRequestError);
 
             expect(statementRepository.create).not.toHaveBeenCalled();
@@ -158,7 +157,7 @@ describe("CardStatementService", () => {
             const invalidFiles = [{ filename: 'fatura.pdf', buffer: Buffer.from('pdf') }];
 
             await expect(
-                service.create('user-uuid-123', { card_id: 'card-uuid-123', year_reference: 2026, month_reference: 4 }, invalidFiles)
+                service.create('user-uuid-123', 'card-uuid-123', { year_reference: 2026, month_reference: 4 }, invalidFiles)
             ).rejects.toBeInstanceOf(BadRequestError);
 
             expect(statementRepository.create).not.toHaveBeenCalled();
@@ -174,7 +173,7 @@ describe("CardStatementService", () => {
 
             expect(result.total).toBe(2000);
             expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:stmt-uuid-123');
-            expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:user-uuid-123:all');
+            expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:card-uuid-123:all');
         });
 
         it("should throw NotFoundError if statement not found", async () => {
@@ -198,7 +197,7 @@ describe("CardStatementService", () => {
 
             expect(statementRepository.delete).toHaveBeenCalledWith('stmt-uuid-123');
             expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:stmt-uuid-123');
-            expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:user-uuid-123:all');
+            expect(cacheProvider.del).toHaveBeenCalledWith('card_statements:card-uuid-123:all');
         });
 
         it.each([2, 3, 5])("should throw ConflictError when status is %i", async (statusId) => {

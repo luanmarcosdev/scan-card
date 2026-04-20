@@ -1,10 +1,7 @@
 import { Transform } from "class-transformer";
-import { IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import { IsNumber, IsOptional, Max, Min } from "class-validator";
 
 export class CreateCardStatementDto {
-    @IsString()
-    card_id!: string;
-
     @Transform(({ value }) => parseInt(value, 10))
     @IsNumber()
     year_reference!: number;

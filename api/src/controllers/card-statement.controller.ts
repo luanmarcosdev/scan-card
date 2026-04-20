@@ -25,7 +25,7 @@ export class CardStatementController {
 
     async findAll(req: Request, res: Response, next: NextFunction) {
         try {
-            const statements = await service.findAll(req.userId);
+            const statements = await service.findAll(req.userId, req.params.cardId);
             const response: IResponse<CardStatementResponseDto> = {
                 status: 200,
                 message: 'Card statements retrieved successfully',
@@ -65,7 +65,7 @@ export class CardStatementController {
                 buffer: f.buffer,
             }));
 
-            const statement = await service.create(req.userId, dto, files);
+            const statement = await service.create(req.userId, req.params.cardId, dto, files);
             const response: IResponse<CardStatementResponseDto> = {
                 status: 202,
                 message: 'Card statement created and queued for processing',

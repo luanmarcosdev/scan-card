@@ -28,13 +28,13 @@ export class CardStatementService {
         private readonly storageProvider: IStorageProvider,
     ) {}
 
-    async findAll(userId: string): Promise<CardStatement[]> {
-        const cacheKey = `card_statements:${userId}:all`;
+    async findAll(userId: string, cardId: string): Promise<CardStatement[]> {
+        const cacheKey = `card_statements:${cardId}:all`;
         const cached = await this.cacheProvider.get(cacheKey);
 
         if (cached) return JSON.parse(cached);
 
-        const statements = await this.statementRepository.findAll(userId);
+        const statements = await this.statementRepository.findAll(userId, cardId);
 
         await this.cacheProvider.set(cacheKey, JSON.stringify(statements), 120);
 
@@ -58,7 +58,7 @@ export class CardStatementService {
         return statement;
     }
 
-    async create(userId: string, data: CreateCardStatementDto, files: ImageFile[]): Promise<CardStatement> {
+    async create(userId: string, cardId: string, data: CreateCardStatementDto, files: ImageFile[]): Promise<CardStatement> {
         if (!files || files.length === 0) {
             throw new BadRequestError({ message: 'At least one image is required' });
         }
@@ -75,7 +75,7 @@ export class CardStatementService {
             });
         }
 
-        const statement = await this.statementRepository.create(data, userId);
+        const statement = await this.statementRepository.create(data, userId, cardId);
 
         const imagePaths: Array<{ card_statement_id: string; image_path: string }> = [];
 
@@ -92,7 +92,7 @@ export class CardStatementService {
         // TODO: publicar na exchange quando o worker for implementado
         // publishToExchange('statements', 'process', JSON.stringify({ statementId: statement.id }));
 
-        await this.cacheProvider.del(`card_statements:${userId}:all`);
+        await this.cacheProvider.del(`card_statements:${cardId}:all`);
 
         return { ...statement, status_id: 2 };
     }
@@ -118,7 +118,7 @@ export class CardStatementService {
         }
 
         this.cacheProvider.del(`card_statements:${id}`);
-        this.cacheProvider.del(`card_statements:${userId}:all`);
+        this.cacheProvider.del(`card_statements:${statement.card_id}:all`);
 
         return updated;
     }
@@ -137,7 +137,7 @@ export class CardStatementService {
         await this.statementRepository.delete(id);
 
         await this.cacheProvider.del(`card_statements:${id}`);
-        await this.cacheProvider.del(`card_statements:${userId}:all`);
+        await this.cacheProvider.del(`card_statements:${statement.card_id}:all`);
     }
 
 }
