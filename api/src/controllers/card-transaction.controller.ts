@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { validate } from "class-validator";
 import { CardTransactionService } from "../services/card-transaction.service";
 import { CardTransactionRepositoryMySQL } from "../repositories/card-transaction.repository.mysql";
+import { ExpenseCategoryRepositoryMySQL } from "../repositories/expense-category.repository.mysql";
 import { RedisCacheProvider } from "../infra/cache/redis-cache.provider";
 import { CreateCardTransactionDto } from "../dtos/card-transaction/create-card-transaction.dto";
 import { UpdateCardTransactionDto } from "../dtos/card-transaction/update-card-transaction.dto";
@@ -13,6 +14,7 @@ import { cardTransactionToResponseDto } from "../mappers/card-transaction.mapper
 const service = new CardTransactionService(
     new CardTransactionRepositoryMySQL(),
     new RedisCacheProvider(),
+    new ExpenseCategoryRepositoryMySQL(),
 );
 
 export class CardTransactionController {

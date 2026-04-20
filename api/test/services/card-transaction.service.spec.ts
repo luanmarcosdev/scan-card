@@ -1,9 +1,11 @@
 import { CardTransactionService } from "../../src/services/card-transaction.service";
 import { ICardTransactionRepository } from "../../src/contracts/card-transaction-repository.interface";
+import { IExpenseCategoryRepository } from "../../src/contracts/expense-category-repository.interface";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 import { NotFoundError } from "../../src/errors/not-found.error";
 import { BadRequestError } from "../../src/errors/bad-request.error";
 import { CardTransaction } from "../../src/infra/database/entities/card-transaction.entity";
+import { ExpenseCategory } from "../../src/infra/database/entities/expense-category.entity";
 
 const mockTransaction: CardTransaction = {
     id: 'txn-uuid-123',
@@ -20,10 +22,21 @@ const mockTransaction: CardTransaction = {
     deleted_at: null,
 };
 
+const mockCategory: ExpenseCategory = {
+    id: 'cat-uuid-123',
+    user_id: 'user-uuid-123',
+    category: 'Food',
+    description: null,
+    created_at: new Date('2026-04-01'),
+    updated_at: null,
+    deleted_at: null,
+};
+
 describe("CardTransactionService", () => {
     let service: CardTransactionService;
     let transactionRepository: jest.Mocked<ICardTransactionRepository>;
     let cacheProvider: jest.Mocked<ICacheProvider>;
+    let expenseCategoryRepository: jest.Mocked<IExpenseCategoryRepository>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -43,7 +56,18 @@ describe("CardTransactionService", () => {
             del: jest.fn(),
         };
 
-        service = new CardTransactionService(transactionRepository, cacheProvider);
+        expenseCategoryRepository = {
+            findAll: jest.fn(),
+            findById: jest.fn(),
+            findByIdAndUserId: jest.fn(),
+            create: jest.fn(),
+            createMany: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            isInUse: jest.fn(),
+        };
+
+        service = new CardTransactionService(transactionRepository, cacheProvider, expenseCategoryRepository);
     });
 
     describe("findAll", () => {
@@ -105,6 +129,7 @@ describe("CardTransactionService", () => {
 
     describe("create", () => {
         it("should create transaction and invalidate list cache", async () => {
+            expenseCategoryRepository.findByIdAndUserId.mockResolvedValue(mockCategory);
             transactionRepository.create.mockResolvedValue(mockTransaction);
 
             const result = await service.create('user-uuid-123', 'stmt-uuid-123', {
@@ -120,6 +145,19 @@ describe("CardTransactionService", () => {
             );
             expect(cacheProvider.del).toHaveBeenCalledWith('card_transactions:stmt-uuid-123:all');
         });
+
+        it("should throw NotFoundError if expense category does not exist", async () => {
+            expenseCategoryRepository.findByIdAndUserId.mockResolvedValue(null);
+
+            await expect(
+                service.create('user-uuid-123', 'stmt-uuid-123', {
+                    expense_category_id: 'invalid-cat-id',
+                    total_value: 250,
+                })
+            ).rejects.toBeInstanceOf(NotFoundError);
+
+            expect(transactionRepository.create).not.toHaveBeenCalled();
+        });
     });
 
     describe("update", () => {
@@ -132,6 +170,17 @@ describe("CardTransactionService", () => {
             expect(result.merchant).toBe('Amazon');
             expect(cacheProvider.del).toHaveBeenCalledWith('card_transactions:txn-uuid-123');
             expect(cacheProvider.del).toHaveBeenCalledWith('card_transactions:stmt-uuid-123:all');
+        });
+
+        it("should throw NotFoundError if expense_category_id does not exist on update", async () => {
+            transactionRepository.findByIdAndUserId.mockResolvedValue(mockTransaction);
+            expenseCategoryRepository.findByIdAndUserId.mockResolvedValue(null);
+
+            await expect(
+                service.update('txn-uuid-123', 'user-uuid-123', { expense_category_id: 'invalid-cat-id' })
+            ).rejects.toBeInstanceOf(NotFoundError);
+
+            expect(transactionRepository.update).not.toHaveBeenCalled();
         });
 
         it("should throw NotFoundError if transaction not found", async () => {
