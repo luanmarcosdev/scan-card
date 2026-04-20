@@ -34,10 +34,10 @@ export class CardTransaction {
     @Column({ type: 'int', default: 1 })
     parcels!: number;
 
-    @Column({ name: 'parcel_value', type: 'decimal', precision: 10, scale: 2, nullable: true, default: null })
+    @Column({ name: 'parcel_value', type: 'decimal', precision: 10, scale: 2, nullable: true, default: null, transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null } })
     parcel_value!: number | null;
 
-    @Column({ name: 'total_value', type: 'decimal', precision: 10, scale: 2 })
+    @Column({ name: 'total_value', type: 'decimal', precision: 10, scale: 2, transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null } })
     total_value!: number;
 
     @CreateDateColumn()
