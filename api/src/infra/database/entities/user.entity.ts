@@ -27,7 +27,7 @@ export class User {
     @Column({ length: 60 })
     password!: string;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: null })
+    @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, default: null, transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null } })
     salary!: number | null;
 
     @Column({ length: 20, nullable: true })
