@@ -11,7 +11,7 @@ module.exports = {
   },
   testMatch: ["**/*.spec.ts"],
 
-  testPathIgnorePatterns: ["/node_modules/", "/dist/"],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/", "/test/integration/"],
 
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
