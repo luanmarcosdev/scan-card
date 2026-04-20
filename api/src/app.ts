@@ -1,4 +1,6 @@
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './docs/swagger';
 import userRouter from './routes/user.routes';
 import authRouter from './routes/auth.routes';
 import cardRouter from './routes/card.routes';
@@ -14,6 +16,7 @@ export const app = express();
 
 app.use(express.json());
 // app.use(rateLimit(new RedisRateLimitProvider(), 5, 120));
+app.use('/api/doc', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/', userRouter);
 app.use('/api/', authRouter);
 app.use('/api/', cardRouter);
