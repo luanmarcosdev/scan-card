@@ -1,4 +1,4 @@
-import { IsDateString, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { IsNumber, IsOptional, IsString, Matches, Min } from "class-validator";
 
 export class CreateCardTransactionDto {
     @IsString()
@@ -13,7 +13,7 @@ export class CreateCardTransactionDto {
     merchant?: string | null;
 
     @IsOptional()
-    @IsDateString()
+    @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'transaction_date must be a date in YYYY-MM-DD format' })
     transaction_date?: string | null;
 
     @IsOptional()
