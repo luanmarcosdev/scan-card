@@ -7,7 +7,7 @@ export class Job {
     id!: string;
 
     @Index()
-    @Column({ name: 'statement_id', length: 36, nullable: true, default: null })
+    @Column({ name: 'statement_id', type: 'varchar', length: 36, nullable: true, default: null })
     statement_id!: string | null;
 
     @Column({ length: 100 })
