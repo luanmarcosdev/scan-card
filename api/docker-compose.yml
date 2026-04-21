@@ -63,12 +63,18 @@ services:
       timeout: 5s
       retries: 10
 
-  worker_luan:
+  worker-statement-processor-ai:
     build: .
-    command: npm run worker:luan
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run worker:statement-processor
     depends_on:
       rabbitmq:
-        condition: service_healthy  
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:
