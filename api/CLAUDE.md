@@ -19,7 +19,8 @@ docker exec -it df9db11be110 npm run start
 docker exec -it df9db11be110 npm run worker:luan 
 
 # Tests
-npm test                                        # Run all tests once
+npm test                                        # Run unit tests
+npm run test:integration                        # Run integration tests (requires Docker infra running)
 
 # Database migrations
 npm run migration:generate   # Auto-generate from entity changes (data-source: src/infra/database/data-source.ts)
@@ -45,7 +46,7 @@ Routes → Controllers → Services → Repositories → Database/Cache
 - **`src/mappers/`** — Entity-to-DTO conversions
 - **`src/errors/`** — Custom error classes (`ErrorBase`, `NotFoundError`, `ConflictError`, `BadRequestError`) caught by the global error middleware
 - **`src/infra/`** — Redis, RabbitMQ, and storage client wrappers
-- **`src/infra/storage/`** — `LocalStorageProvider` implements `IStorageProvider`; saves files to `uploads/{userId}/{statementId}/`; swap for MinIO later without changing services
+- **`src/infra/storage/`** — `LocalStorageProvider` implements `IStorageProvider`; saves files to `$UPLOAD_DIR/{userId}/{statementId}/` (defaults to `uploads/` in cwd); swap for MinIO later without changing services
 - **`src/middlewares/upload.middleware.ts`** — multer with `memoryStorage`; fileFilter accepts only jpg/jpeg/png; field name is `images` (array)
 - **`src/workers/`** — RabbitMQ consumer processes (separate entry points)
 - **`src/infra/database/`** — TypeORM data source config, entities, and migrations
@@ -54,9 +55,10 @@ Routes → Controllers → Services → Repositories → Database/Cache
 
 **card_statements flow:**
 - `POST /api/cards/:cardId/statements` — multipart/form-data with fields `year_reference`, `month_reference`, `total` (optional) + files under key `images`
-- Creates statement (status=pending), saves images to disk, creates `card_statement_images` records, updates status to `sent`, publishes `{ statementId }` to exchange `statements` routing key `process`
+- Creates statement (status=pending), saves images to disk, creates `card_statement_images` records, updates status to `sent`
 - Returns 202 Accepted
-- Worker (passo 6 — not yet implemented) consumes, calls LLM, saves to `card_transactions`, updates status to `success` or `needs_review`
+- **TODO:** publish `{ statementId }` to exchange `statements` routing key `process` (not yet implemented — see `card-statement.service.ts`)
+- **TODO:** worker that consumes the queue, calls LLM, saves to `card_transactions`, updates status to `success` (4) or `needs_review` (7)
 
 **processing_status reference table (no CRUD):**
 ```
@@ -69,7 +71,9 @@ Delete allowed only on status: 1, 4, 6.
 **Environment variables** (see `.env.example`):
 ```
 PORT, DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME,
-REDIS_HOST, REDIS_PORT, REDIS_PASS
+REDIS_HOST, REDIS_PORT, REDIS_PASS,
+UPLOAD_DIR (optional, defaults to ./uploads),
+JWT_SECRET, JWT_EXPIRES_IN
 ```
 
 TypeORM `synchronize` is disabled — all schema changes must go through migrations.
@@ -77,3 +81,9 @@ TypeORM `synchronize` is disabled — all schema changes must go through migrati
 ## Testing
 
 Tests live in `/test/` (mirroring `src/` structure) and use `.spec.ts` suffix. Services are unit tested with mocked repositories, cache providers, and storage providers. Path alias `@/` maps to `src/`.
+
+Integration tests live in `test/integration/` and use real MySQL + Redis (Docker Compose must be running). Config: `jest.integration.config.js`. Setup file: `test/integration/jest.setup.ts` (loads `.env.test`). Shared helpers:
+- `test/integration/helpers/db.ts` — `initDB`, `closeDB`, `cleanupUser`, `cleanupCard`, `forceStatementStatus`
+- `test/integration/helpers/auth.ts` — `createUserAndGetToken` (register + login, returns token + cleanup fn)
+
+Swagger UI is available at `/api/doc` when the server is running.
