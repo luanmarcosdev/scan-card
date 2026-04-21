@@ -51,7 +51,7 @@ const options: swaggerJsdoc.Options = {
           properties: {
             name: { type: 'string', example: 'John Doe' },
             email: { type: 'string', format: 'email', example: 'user@example.com' },
-            document: { type: 'string', description: 'CPF', example: '123.456.789-09' },
+            document: { type: 'string', description: 'CPF (only digits, no mask)', example: '12345678909' },
             password: { type: 'string', description: 'Min 6 chars, uppercase, lowercase, digit', example: 'Password1' },
             salary: { type: 'number', nullable: true, minimum: 0, example: 5000 },
             phone: { type: 'string', example: '11999999999' },
