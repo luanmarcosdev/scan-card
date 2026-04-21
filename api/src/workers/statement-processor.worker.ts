@@ -154,7 +154,15 @@ async function startWorker() {
         ROUTING_KEY,
         QUEUE,
         processMessage,
-        { maxRetries: MAX_RETRIES, retryDelay: RETRY_DELAY },
+        {
+            maxRetries: MAX_RETRIES,
+            retryDelay: RETRY_DELAY,
+            onRetry: async (raw) => {
+                const { statementId } = JSON.parse(raw) as { statementId: string };
+                const job = await jobRepo.findByStatementId(statementId);
+                if (job) await jobRepo.incrementRetries(job.id);
+            },
+        },
     );
 
     console.log(`[INFO]: statement-processor worker started — listening on ${QUEUE}`);

@@ -9,6 +9,7 @@ export const consumeFromExchange = async (
     options?: {
         maxRetries?: number;
         retryDelay?: number;
+        onRetry?: (raw: string, retryCount: number) => Promise<void>;
     }
 ) => {
     const MAX_RETRIES = options?.maxRetries ?? 3;
@@ -21,7 +22,7 @@ export const consumeFromExchange = async (
     // cria a fila de retry apontando de volta para a fila principal
     await assertRetryQueue(channel, queue, exchange, routingKey, RETRY_DELAY);
 	
-		// configura dlq
+    // configura dlq
     await channel.assertQueue(queue, {
         durable: true,
         arguments: {
@@ -43,18 +44,22 @@ export const consumeFromExchange = async (
             } catch (err) {
 		            // verifica numero de retry
                 if (retries < MAX_RETRIES) {
-                    // ainda tem tentativas → manda para fila de retry
-                    
-                    channel.ack(msg); // remove da fila principal
+                    const errorMessage = (err as Error).message ?? String(err);
 
-                    // publica na fila do retry
+                    channel.ack(msg);
+
                     channel.publish('retry', routingKey, msg.content, {
                         persistent: true,
                         headers: {
                             ...msg.properties.headers,
-                            'x-retry-count': retries + 1 // incrementa o contador
+                            'x-retry-count': retries + 1,
+                            'x-last-error': errorMessage,
                         }
                     });
+
+                    if (options?.onRetry) {
+                        await options.onRetry(msg.content.toString(), retries + 1);
+                    }
 
                     console.warn(`[RETRY]: Tentativa ${retries + 1}/${MAX_RETRIES} | queue: ${queue}`);
                 } else {
