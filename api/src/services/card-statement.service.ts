@@ -1,6 +1,7 @@
 import { CardStatement } from "../infra/database/entities/card-statement.entity";
 import { ICardStatementRepository } from "../contracts/card-statement-repository.interface";
 import { ICardStatementImageRepository } from "../contracts/card-statement-image-repository.interface";
+import { ICardRepository } from "../contracts/card-repository.interface";
 import { ICacheProvider } from "../contracts/cache-provider.interface";
 import { IStorageProvider } from "../contracts/storage-provider.interface";
 import { CreateCardStatementDto } from "../dtos/card-statement/create-card-statement.dto";
@@ -26,6 +27,7 @@ export class CardStatementService {
         private readonly imageRepository: ICardStatementImageRepository,
         private readonly cacheProvider: ICacheProvider,
         private readonly storageProvider: IStorageProvider,
+        private readonly cardRepository: ICardRepository,
     ) {}
 
     async findAll(userId: string, cardId: string): Promise<CardStatement[]> {
@@ -59,6 +61,12 @@ export class CardStatementService {
     }
 
     async create(userId: string, cardId: string, data: CreateCardStatementDto, files: ImageFile[]): Promise<CardStatement> {
+        const card = await this.cardRepository.findByIdAndUserId(cardId, userId);
+
+        if (!card) {
+            throw new NotFoundError({ message: 'Card not found' });
+        }
+
         if (!files || files.length === 0) {
             throw new BadRequestError({ message: 'At least one image is required' });
         }

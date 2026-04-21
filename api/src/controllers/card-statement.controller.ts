@@ -4,6 +4,7 @@ import { plainToClass } from "class-transformer";
 import { CardStatementService } from "../services/card-statement.service";
 import { CardStatementRepositoryMySQL } from "../repositories/card-statement.repository.mysql";
 import { CardStatementImageRepositoryMySQL } from "../repositories/card-statement-image.repository.mysql";
+import { CardRepositoryMySQL } from "../repositories/card.repository.mysql";
 import { RedisCacheProvider } from "../infra/cache/redis-cache.provider";
 import { LocalStorageProvider } from "../infra/storage/local-storage.provider";
 import { CreateCardStatementDto } from "../dtos/card-statement/create-card-statement.dto";
@@ -19,6 +20,7 @@ const service = new CardStatementService(
     new CardStatementImageRepositoryMySQL(),
     cacheProvider,
     new LocalStorageProvider(),
+    new CardRepositoryMySQL(),
 );
 
 export class CardStatementController {

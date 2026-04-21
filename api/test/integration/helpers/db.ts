@@ -26,3 +26,20 @@ export async function cleanupUser(email: string) {
     );
     await AppDataSource.query(`DELETE FROM users WHERE email = ?`, [email]);
 }
+
+export async function cleanupCard(cardId: string) {
+    await AppDataSource.query(
+        `DELETE FROM card_statement_images WHERE card_statement_id IN (SELECT id FROM card_statements WHERE card_id = ?)`,
+        [cardId]
+    );
+    await AppDataSource.query(`DELETE FROM card_transactions WHERE card_statement_id IN (SELECT id FROM card_statements WHERE card_id = ?)`, [cardId]);
+    await AppDataSource.query(`DELETE FROM card_statements WHERE card_id = ?`, [cardId]);
+    await AppDataSource.query(`DELETE FROM cards WHERE id = ?`, [cardId]);
+}
+
+export async function forceStatementStatus(statementId: string, statusId: number) {
+    await AppDataSource.query(
+        `UPDATE card_statements SET status_id = ? WHERE id = ?`,
+        [statusId, statementId]
+    );
+}

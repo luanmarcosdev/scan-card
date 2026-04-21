@@ -1,12 +1,14 @@
 import { CardStatementService, ImageFile } from "../../src/services/card-statement.service";
 import { ICardStatementRepository } from "../../src/contracts/card-statement-repository.interface";
 import { ICardStatementImageRepository } from "../../src/contracts/card-statement-image-repository.interface";
+import { ICardRepository } from "../../src/contracts/card-repository.interface";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 import { IStorageProvider } from "../../src/contracts/storage-provider.interface";
 import { NotFoundError } from "../../src/errors/not-found.error";
 import { ConflictError } from "../../src/errors/conflict.error";
 import { BadRequestError } from "../../src/errors/bad-request.error";
 import { CardStatement } from "../../src/infra/database/entities/card-statement.entity";
+import { Card } from "../../src/infra/database/entities/card.entity";
 
 const mockStatement: CardStatement = {
     id: 'stmt-uuid-123',
@@ -26,12 +28,23 @@ const mockFiles: ImageFile[] = [
     { filename: 'fatura2.jpg', buffer: Buffer.from('img2') },
 ];
 
+const mockCard: Card = {
+    id: 'card-uuid-123',
+    user_id: 'user-uuid-123',
+    last_numbers: '1234',
+    name: 'Test Card',
+    created_at: new Date('2026-01-01'),
+    updated_at: null,
+    deleted_at: null,
+};
+
 describe("CardStatementService", () => {
     let service: CardStatementService;
     let statementRepository: jest.Mocked<ICardStatementRepository>;
     let imageRepository: jest.Mocked<ICardStatementImageRepository>;
     let cacheProvider: jest.Mocked<ICacheProvider>;
     let storageProvider: jest.Mocked<IStorageProvider>;
+    let cardRepository: jest.Mocked<ICardRepository>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -62,7 +75,17 @@ describe("CardStatementService", () => {
             delete: jest.fn(),
         };
 
-        service = new CardStatementService(statementRepository, imageRepository, cacheProvider, storageProvider);
+        cardRepository = {
+            findAll: jest.fn(),
+            findById: jest.fn(),
+            findByIdAndUserId: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn(),
+            isInUse: jest.fn(),
+        };
+
+        service = new CardStatementService(statementRepository, imageRepository, cacheProvider, storageProvider, cardRepository);
     });
 
     describe("findAll", () => {
@@ -123,7 +146,17 @@ describe("CardStatementService", () => {
     });
 
     describe("create", () => {
+        it("should throw NotFoundError if card does not exist", async () => {
+            cardRepository.findByIdAndUserId.mockResolvedValue(null);
+
+            await expect(
+                service.create('user-uuid-123', 'card-uuid-123', { year_reference: 2026, month_reference: 4 }, mockFiles)
+            ).rejects.toBeInstanceOf(NotFoundError);
+            expect(statementRepository.create).not.toHaveBeenCalled();
+        });
+
         it("should create statement, save images and invalidate list cache", async () => {
+            cardRepository.findByIdAndUserId.mockResolvedValue(mockCard);
             statementRepository.create.mockResolvedValue(mockStatement);
             storageProvider.save
                 .mockResolvedValueOnce('/uploads/user-uuid-123/stmt-uuid-123/fatura.jpg')
@@ -146,6 +179,7 @@ describe("CardStatementService", () => {
         });
 
         it("should throw BadRequestError if no files provided", async () => {
+            cardRepository.findByIdAndUserId.mockResolvedValue(mockCard);
             await expect(
                 service.create('user-uuid-123', 'card-uuid-123', { year_reference: 2026, month_reference: 4 }, [])
             ).rejects.toBeInstanceOf(BadRequestError);
@@ -154,6 +188,7 @@ describe("CardStatementService", () => {
         });
 
         it("should throw BadRequestError if file has invalid extension", async () => {
+            cardRepository.findByIdAndUserId.mockResolvedValue(mockCard);
             const invalidFiles = [{ filename: 'fatura.pdf', buffer: Buffer.from('pdf') }];
 
             await expect(

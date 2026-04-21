@@ -4,7 +4,7 @@ import { IStorageProvider } from '../../contracts/storage-provider.interface';
 
 export class LocalStorageProvider implements IStorageProvider {
 
-    private readonly baseDir = join(process.cwd(), 'uploads');
+    private readonly baseDir = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads');
 
     async save(file: { filename: string; buffer: Buffer }, folder: string): Promise<string> {
         const dir = join(this.baseDir, folder);
