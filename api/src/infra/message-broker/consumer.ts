@@ -16,7 +16,7 @@ export const consumeFromExchange = async (
     
     const channel = getChannel();
 
-    await channel.assertExchange(exchange, 'direct', { durable: true });
+    await channel.assertExchange(exchange, 'topic', { durable: true });
 
     // cria a fila de retry apontando de volta para a fila principal
     await assertRetryQueue(channel, queue, exchange, routingKey, RETRY_DELAY);
