@@ -8,6 +8,5 @@ export function expenseCategoryToResponseDto(category: ExpenseCategory): Expense
         description: category.description,
         created_at: category.created_at,
         updated_at: category.updated_at,
-        deleted_at: category.deleted_at,
     };
 }
