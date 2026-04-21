@@ -8,6 +8,5 @@ export function cardToResponseDto(card: Card): CardResponseDto {
         name: card.name,
         created_at: card.created_at,
         updated_at: card.updated_at,
-        deleted_at: card.deleted_at,
     };
 }
