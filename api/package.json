@@ -16,8 +16,8 @@
     "migration:create": "typeorm-ts-node-commonjs migration:create -d src/infra/database/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/infra/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/infra/database/data-source.ts",
-    "worker:luan": "ts-node-dev --respawn --transpile-only src/workers/example.worker.ts",
-    "worker:statement-processor": "ts-node-dev --respawn --transpile-only src/workers/statement-processor.worker.ts"
+    "worker:statement-processor": "ts-node-dev --respawn --transpile-only src/workers/statement-processor.worker.ts",
+    "worker:dlq": "ts-node-dev --respawn --transpile-only src/workers/dlq.worker.ts"
   },
   "author": "",
   "license": "ISC",

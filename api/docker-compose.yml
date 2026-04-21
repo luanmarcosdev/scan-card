@@ -76,6 +76,19 @@ services:
       mysql:
         condition: service_healthy
 
+  worker-dlq:
+    build: .
+    env_file: .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run worker:dlq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+
 volumes:
   mysql_data:
   redis_data:

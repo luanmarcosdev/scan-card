@@ -14,6 +14,10 @@ export class JobRepositoryMySQL implements IJobRepository {
         return this.repo.findOneBy({ id });
     }
 
+    async findByStatementId(statementId: string): Promise<Job | null> {
+        return this.repo.findOneBy({ statement_id: statementId });
+    }
+
     async updateStatus(id: string, statusId: number): Promise<void> {
         await this.repo.update({ id }, { status_id: statusId });
     }
