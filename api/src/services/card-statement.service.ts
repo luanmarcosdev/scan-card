@@ -2,6 +2,7 @@ import { CardStatement } from "../infra/database/entities/card-statement.entity"
 import { ICardStatementRepository } from "../contracts/card-statement-repository.interface";
 import { ICardStatementImageRepository } from "../contracts/card-statement-image-repository.interface";
 import { ICardRepository } from "../contracts/card-repository.interface";
+import { IJobRepository } from "../contracts/job-repository.interface";
 import { ICacheProvider } from "../contracts/cache-provider.interface";
 import { IStorageProvider } from "../contracts/storage-provider.interface";
 import { CreateCardStatementDto } from "../dtos/card-statement/create-card-statement.dto";
@@ -9,6 +10,7 @@ import { UpdateCardStatementDto } from "../dtos/card-statement/update-card-state
 import { NotFoundError } from "../errors/not-found.error";
 import { ConflictError } from "../errors/conflict.error";
 import { BadRequestError } from "../errors/bad-request.error";
+import { publishToExchange } from "../infra/message-broker/producer";
 
 export interface ImageFile {
     filename: string;
@@ -28,6 +30,7 @@ export class CardStatementService {
         private readonly cacheProvider: ICacheProvider,
         private readonly storageProvider: IStorageProvider,
         private readonly cardRepository: ICardRepository,
+        private readonly jobRepository: IJobRepository,
     ) {}
 
     async findAll(userId: string, cardId: string): Promise<CardStatement[]> {
@@ -97,8 +100,17 @@ export class CardStatementService {
         // 2 = sent: imagens salvas e prontas para o worker consumir
         await this.statementRepository.updateStatus(statement.id, 2);
 
-        // TODO: publicar na exchange quando o worker for implementado
-        // publishToExchange('statements', 'process', JSON.stringify({ statementId: statement.id }));
+        const payload = { statementId: statement.id };
+
+        await this.jobRepository.create({
+            statement_id: statement.id,
+            exchange: 'events',
+            routing_key: 'statement-ai-process',
+            payload,
+            status_id: 2,
+        });
+
+        publishToExchange('events', 'statement-ai-process', JSON.stringify(payload));
 
         await this.cacheProvider.del(`card_statements:${cardId}:all`);
 

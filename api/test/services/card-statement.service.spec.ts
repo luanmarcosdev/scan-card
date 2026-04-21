@@ -1,7 +1,12 @@
 import { CardStatementService, ImageFile } from "../../src/services/card-statement.service";
+
+jest.mock('../../src/infra/message-broker/producer', () => ({
+    publishToExchange: jest.fn(),
+}));
 import { ICardStatementRepository } from "../../src/contracts/card-statement-repository.interface";
 import { ICardStatementImageRepository } from "../../src/contracts/card-statement-image-repository.interface";
 import { ICardRepository } from "../../src/contracts/card-repository.interface";
+import { IJobRepository } from "../../src/contracts/job-repository.interface";
 import { ICacheProvider } from "../../src/contracts/cache-provider.interface";
 import { IStorageProvider } from "../../src/contracts/storage-provider.interface";
 import { NotFoundError } from "../../src/errors/not-found.error";
@@ -45,6 +50,7 @@ describe("CardStatementService", () => {
     let cacheProvider: jest.Mocked<ICacheProvider>;
     let storageProvider: jest.Mocked<IStorageProvider>;
     let cardRepository: jest.Mocked<ICardRepository>;
+    let jobRepository: jest.Mocked<IJobRepository>;
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -85,7 +91,14 @@ describe("CardStatementService", () => {
             isInUse: jest.fn(),
         };
 
-        service = new CardStatementService(statementRepository, imageRepository, cacheProvider, storageProvider, cardRepository);
+        jobRepository = {
+            create: jest.fn(),
+            findById: jest.fn(),
+            updateStatus: jest.fn(),
+            incrementRetries: jest.fn(),
+        };
+
+        service = new CardStatementService(statementRepository, imageRepository, cacheProvider, storageProvider, cardRepository, jobRepository);
     });
 
     describe("findAll", () => {
@@ -158,6 +171,7 @@ describe("CardStatementService", () => {
         it("should create statement, save images and invalidate list cache", async () => {
             cardRepository.findByIdAndUserId.mockResolvedValue(mockCard);
             statementRepository.create.mockResolvedValue(mockStatement);
+            jobRepository.create.mockResolvedValue({} as any);
             storageProvider.save
                 .mockResolvedValueOnce('/uploads/user-uuid-123/stmt-uuid-123/fatura.jpg')
                 .mockResolvedValueOnce('/uploads/user-uuid-123/stmt-uuid-123/fatura2.jpg');
