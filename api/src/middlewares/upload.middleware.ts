@@ -3,8 +3,11 @@ import { BadRequestError } from "../errors/bad-request.error";
 
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 
+const MAX_FILES = 8;
+
 export const upload = multer({
     storage: multer.memoryStorage(),
+    limits: { files: MAX_FILES },
     fileFilter: (_req, file, cb) => {
         const ext = file.originalname.split('.').pop()?.toLowerCase();
 
