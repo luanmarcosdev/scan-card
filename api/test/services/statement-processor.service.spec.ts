@@ -268,5 +268,36 @@ describe('StatementProcessorService', () => {
 
             expect(callOrder.indexOf('updateStatus:3')).toBeLessThan(callOrder.indexOf('ai'));
         });
+
+        it('should use total as parcel_value and omit merchant and transaction_date when they are null', async () => {
+            statementRepo.findById.mockResolvedValue({ ...mockStatement, total: 50.00 });
+            statementRepo.updateStatus.mockResolvedValue();
+            jobRepo.updateStatusByStatementId.mockResolvedValue();
+            imageRepo.findByStatementId.mockResolvedValue(mockImages);
+            categoryRepo.findAll.mockResolvedValue(mockCategories);
+            aiExtractor.analyseAndExtractTransactions.mockResolvedValue({
+                valid: true,
+                transactions: [
+                    { expense_category_id: 'cat-uuid-1', merchant: null, transaction_date: null, parcels: 1, parcel_value: null, total: 50.00 },
+                ],
+                inputTokens: null,
+                outputTokens: null,
+                rawResponse: { status: 200, data: [] },
+            });
+            transactionRepo.create.mockResolvedValue({} as any);
+            auditRepo.create.mockResolvedValue({} as any);
+
+            await service.process('stmt-uuid-123');
+
+            expect(transactionRepo.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    merchant: undefined,
+                    transaction_date: undefined,
+                    parcel_value: 50.00,
+                }),
+                'user-uuid-123',
+                'stmt-uuid-123',
+            );
+        });
     });
 });
