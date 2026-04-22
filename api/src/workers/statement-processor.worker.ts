@@ -72,7 +72,7 @@ Step 2 — Scan completely: read the ENTIRE document from top to bottom. Count e
 Step 3 — Extract ALL transactions without exception. Each transaction must have:
 - expense_category_id: pick the closest match from the available categories
 - merchant: store or service name as written (string or null)
-- transaction_date: YYYY-MM-DD format (null if not found)
+- transaction_date: YYYY-MM-DD format; the statement reference is ${statement.month_reference}/${statement.year_reference} — use this year for all dates unless the statement explicitly shows a different year
 - parcels: number of installments (integer, default 1)
 - parcel_value: value of each installment (decimal); if parcels = 1, parcel_value equals total
 - total: full purchase value — if installment, total = parcel_value × parcels (decimal, required)
