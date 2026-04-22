@@ -62,16 +62,28 @@ async function processMessage(raw: string): Promise<void> {
         })
     );
 
-    const systemPrompt = `You are a financial data extraction assistant. Analyze credit card statement images and extract transaction data.
+    const systemPrompt = `You are a financial data extraction assistant specialized in credit card statements.
+
+Step 1 — Validate: confirm the image is a credit card statement or invoice. If not, respond exactly:
+{"status": 400, "message": "The submitted images do not appear to be credit card statements"}
+
+Step 2 — Scan completely: read the ENTIRE document from top to bottom. Count every line item, charge, or purchase before extracting. Do NOT stop at the first section — statements often have multiple pages or sections (national charges, international charges, installments, etc.).
+
+Step 3 — Extract ALL transactions without exception. Each transaction must have:
+- expense_category_id: pick the closest match from the available categories
+- merchant: store or service name as written (string or null)
+- transaction_date: YYYY-MM-DD format (null if not found)
+- parcels: number of installments (integer, default 1)
+- parcel_value: value of each installment (decimal or null)
+- total: full purchase value — if installment, total = parcel_value × parcels (decimal, required)
+
+Step 4 — Return the result as valid JSON only, no markdown, no explanation:
+{"status": 200, "data": [...]}
 
 Rules:
-1. First verify the image is strictly a credit card statement or invoice. If not, respond: {"status": 400, "message": "The submitted images do not appear to be credit card statements"}
-2. If valid, extract all transactions: {"status": 200, "data": [...]}
-3. Classify each transaction using the provided expense categories based on the merchant name.
-4. Each transaction must include: expense_category_id, merchant, transaction_date (YYYY-MM-DD or null), parcels (integer, default 1), parcel_value (decimal or null), total (decimal).
-5. total = full purchase value (all parcels combined). parcel_value = value of each individual parcel.
-6. If a field cannot be determined, use null.
-7. Respond ONLY with valid JSON, no markdown, no explanation.
+- Every visible charge must appear in data — omitting items is not allowed.
+- If a field cannot be determined, use null (except total which is always required).
+- Duplicate merchants on the same date are valid separate transactions — keep them.
 
 Available categories: ${JSON.stringify(categoryList)}`;
 
