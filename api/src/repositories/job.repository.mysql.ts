@@ -22,6 +22,10 @@ export class JobRepositoryMySQL implements IJobRepository {
         await this.repo.update({ id }, { status_id: statusId });
     }
 
+    async updateStatusByStatementId(statementId: string, statusId: number): Promise<void> {
+        await this.repo.update({ statement_id: statementId }, { status_id: statusId });
+    }
+
     async incrementRetries(id: string): Promise<void> {
         await this.repo.increment({ id }, 'retries', 1);
     }

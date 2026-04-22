@@ -96,6 +96,7 @@ describe("CardStatementService", () => {
             findById: jest.fn(),
             findByStatementId: jest.fn(),
             updateStatus: jest.fn(),
+            updateStatusByStatementId: jest.fn(),
             incrementRetries: jest.fn(),
         };
 
