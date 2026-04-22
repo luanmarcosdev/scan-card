@@ -9,6 +9,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - uploads_data:/uploads
     command: npm run dev
     depends_on:
       mysql:
@@ -69,6 +70,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - uploads_data:/uploads
     command: npm run worker:statement-processor
     depends_on:
       rabbitmq:
@@ -93,3 +95,4 @@ volumes:
   mysql_data:
   redis_data:
   rabbitmq_data:
+  uploads_data:
