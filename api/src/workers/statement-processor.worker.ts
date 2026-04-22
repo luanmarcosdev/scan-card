@@ -139,7 +139,7 @@ Available categories: ${JSON.stringify(categoryList)}`;
         );
     }
 
-    const extractedTotal = transactions.reduce((sum, tx) => sum + (tx.total ?? 0), 0);
+    const extractedTotal = transactions.reduce((sum, tx) => sum + (tx.parcel_value ?? tx.total ?? 0), 0);
     const diff = Math.abs(extractedTotal - (statement.total ?? 0));
     const finalStatus = diff <= TOTAL_TOLERANCE ? 4 : 7;
 
