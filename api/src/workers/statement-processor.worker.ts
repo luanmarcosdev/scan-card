@@ -74,7 +74,7 @@ Step 3 — Extract ALL transactions without exception. Each transaction must hav
 - merchant: store or service name as written (string or null)
 - transaction_date: YYYY-MM-DD format (null if not found)
 - parcels: number of installments (integer, default 1)
-- parcel_value: value of each installment (decimal or null)
+- parcel_value: value of each installment (decimal); if parcels = 1, parcel_value equals total
 - total: full purchase value — if installment, total = parcel_value × parcels (decimal, required)
 
 Step 4 — Return the result as valid JSON only, no markdown, no explanation:
@@ -131,7 +131,7 @@ Available categories: ${JSON.stringify(categoryList)}`;
                 merchant: tx.merchant ?? undefined,
                 transaction_date: tx.transaction_date ?? undefined,
                 parcels: tx.parcels ?? 1,
-                parcel_value: tx.parcel_value ?? undefined,
+                parcel_value: tx.parcel_value ?? tx.total,
                 total_value: tx.total,
             },
             statement.user_id,
