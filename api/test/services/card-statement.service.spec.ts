@@ -94,6 +94,7 @@ describe("CardStatementService", () => {
         jobRepository = {
             create: jest.fn(),
             findById: jest.fn(),
+            findByStatementId: jest.fn(),
             updateStatus: jest.fn(),
             incrementRetries: jest.fn(),
         };
