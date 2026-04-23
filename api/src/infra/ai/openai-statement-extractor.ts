@@ -68,6 +68,7 @@ export class OpenAIStatementExtractor implements IAiStatementExtractor {
         - merchant: store or service name as written (string or null)
         - transaction_date: YYYY-MM-DD format; the statement reference is ${monthReference}/${yearReference} — use this year for all dates unless the statement explicitly shows a different year
         - parcels: number of installments (integer, default 1)
+        - current_parcel: which installment this charge represents (integer, default 1); e.g. for "2/6" → current_parcel = 2
         - parcel_value: value of each installment (decimal); if parcels = 1, parcel_value equals total
         - total: full purchase value — if installment, total = parcel_value × parcels (decimal, required)
 

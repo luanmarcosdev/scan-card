@@ -61,6 +61,7 @@ export class StatementProcessorService {
                     merchant: tx.merchant ?? undefined,
                     transaction_date: tx.transaction_date ?? undefined,
                     parcels: tx.parcels ?? 1,
+                    current_parcel: tx.current_parcel ?? 1,
                     parcel_value: tx.parcel_value ?? tx.total,
                     total_value: tx.total,
                 },

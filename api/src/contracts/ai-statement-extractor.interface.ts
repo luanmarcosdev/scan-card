@@ -3,6 +3,7 @@ export interface AiTransaction {
     merchant: string | null;
     transaction_date: string | null;
     parcels: number;
+    current_parcel: number;
     parcel_value: number | null;
     total: number;
 }

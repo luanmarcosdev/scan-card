@@ -20,6 +20,11 @@ export class UpdateCardTransactionDto {
 
     @IsOptional()
     @IsNumber()
+    @Min(1)
+    current_parcel?: number;
+
+    @IsOptional()
+    @IsNumber()
     @Min(0)
     parcel_value?: number | null;
 

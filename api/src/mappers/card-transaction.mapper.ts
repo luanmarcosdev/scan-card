@@ -9,6 +9,7 @@ export function cardTransactionToResponseDto(transaction: CardTransaction): Card
         merchant: transaction.merchant,
         transaction_date: transaction.transaction_date,
         parcels: transaction.parcels,
+        current_parcel: transaction.current_parcel,
         parcel_value: transaction.parcel_value,
         total_value: transaction.total_value,
         created_at: transaction.created_at,

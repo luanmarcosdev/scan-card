@@ -15,6 +15,7 @@ const mockTransaction: CardTransaction = {
     merchant: 'Mercado Livre',
     transaction_date: new Date('2026-04-01'),
     parcels: 1,
+    current_parcel: 1,
     parcel_value: null,
     total_value: 250.00,
     created_at: new Date('2026-04-01'),

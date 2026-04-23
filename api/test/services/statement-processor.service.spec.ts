@@ -156,7 +156,7 @@ describe('StatementProcessorService', () => {
             aiExtractor.analyseAndExtractTransactions.mockResolvedValue({
                 valid: true,
                 transactions: [
-                    { expense_category_id: 'cat-uuid-1', merchant: 'Mercado', transaction_date: '2026-04-10', parcels: 1, parcel_value: 100.00, total: 100.00 },
+                    { expense_category_id: 'cat-uuid-1', merchant: 'Mercado', transaction_date: '2026-04-10', parcels: 1, current_parcel: 1, parcel_value: 100.00, total: 100.00 },
                 ],
                 inputTokens: 200,
                 outputTokens: 50,
@@ -182,7 +182,7 @@ describe('StatementProcessorService', () => {
             aiExtractor.analyseAndExtractTransactions.mockResolvedValue({
                 valid: true,
                 transactions: [
-                    { expense_category_id: 'cat-uuid-1', merchant: 'Loja', transaction_date: '2026-04-15', parcels: 1, parcel_value: 100.00, total: 100.00 },
+                    { expense_category_id: 'cat-uuid-1', merchant: 'Loja', transaction_date: '2026-04-15', parcels: 1, current_parcel: 1, parcel_value: 100.00, total: 100.00 },
                 ],
                 inputTokens: 200,
                 outputTokens: 50,
@@ -207,7 +207,7 @@ describe('StatementProcessorService', () => {
             aiExtractor.analyseAndExtractTransactions.mockResolvedValue({
                 valid: true,
                 transactions: [
-                    { expense_category_id: 'cat-uuid-1', merchant: 'Loja', transaction_date: '2026-04-15', parcels: 1, parcel_value: 100.00, total: 100.00 },
+                    { expense_category_id: 'cat-uuid-1', merchant: 'Loja', transaction_date: '2026-04-15', parcels: 1, current_parcel: 1, parcel_value: 100.00, total: 100.00 },
                 ],
                 inputTokens: 150,
                 outputTokens: 40,
@@ -278,7 +278,7 @@ describe('StatementProcessorService', () => {
             aiExtractor.analyseAndExtractTransactions.mockResolvedValue({
                 valid: true,
                 transactions: [
-                    { expense_category_id: 'cat-uuid-1', merchant: null, transaction_date: null, parcels: 1, parcel_value: null, total: 50.00 },
+                    { expense_category_id: 'cat-uuid-1', merchant: null, transaction_date: null, parcels: 1, current_parcel: 1, parcel_value: null, total: 50.00 },
                 ],
                 inputTokens: null,
                 outputTokens: null,

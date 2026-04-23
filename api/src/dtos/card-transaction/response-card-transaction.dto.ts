@@ -5,6 +5,7 @@ export class CardTransactionResponseDto {
     merchant!: string | null;
     transaction_date!: Date | null;
     parcels!: number;
+    current_parcel!: number;
     parcel_value!: number | null;
     total_value!: number;
     created_at!: Date;
