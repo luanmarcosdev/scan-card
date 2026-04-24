@@ -44,19 +44,25 @@ Routes → Controllers → Services → Repositories → Database/Cache
 - **`src/errors/`** — Custom error classes (`ErrorBase`, `NotFoundError`, `ConflictError`, `BadRequestError`) caught by the global error middleware
 - **`src/infra/`** — Redis, RabbitMQ, and storage client wrappers
 - **`src/infra/storage/`** — `LocalStorageProvider` implements `IStorageProvider`; saves files to `$UPLOAD_DIR/{userId}/{statementId}/`; swap for MinIO later without changing services
-- **`src/middlewares/upload.middleware.ts`** — multer with `memoryStorage`; fileFilter accepts only jpg/jpeg/png; field name is `images` (array)
+- **`src/middlewares/upload.middleware.ts`** — multer with `memoryStorage`; fileFilter accepts only jpg/jpeg/png; max 8 files, 3MB per file; field name is `images` (array). Exports `handleUploadErrors` (4-param Express error middleware) to convert `MulterError` into `UploadError` with descriptive `errors_detail` (`max_size`, `max_files`). Always place `handleUploadErrors` right after `upload.*` in the route chain.
+- **`src/errors/upload.error.ts`** — `UploadError extends ErrorBase` (status 400); accepts optional `errors: Record<string, string>` for detail fields
+- **`src/middlewares/redis-rate-limi.middleware.ts`** — `rateLimit(provider, maxRequests, ttl, keyFn?)`: optional `keyFn` determines the Redis key (default `req.ip`); on 429 returns `errors_detail` with `limit`, `window` (formatted via `formatSeconds`), `retry_after_seconds`
+- **`src/utils/format-seconds.util.ts`** — `formatSeconds(n)`: converts seconds to human-readable string (`3600 → "1h"`, `60 → "1m"`, else `"Xs"`)
+- **`src/contracts/email-provider.interface.ts`** — `IEmailProvider` with `sendAlert(to, subject, body): Promise<void>`
+- **`src/infra/mail/nodemailer-email.provider.ts`** — SMTP implementation via Nodemailer; reads `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` from env
 - **`src/workers/`** — RabbitMQ consumer processes (separate entry points)
 - **`src/infra/database/`** — TypeORM data source config, entities, and migrations
 
 **Worker pattern:** Workers run as separate Docker Compose services. The RabbitMQ consumer (`src/infra/message-broker/consumer.ts`) includes built-in retry logic with configurable max retries + delay, sets `x-last-error` header on each retry, and triggers an optional `onRetry` callback (used to increment `jobs.retries`). Exhausted retries go to the Dead Letter Queue.
+
+**AI abstraction:** `src/contracts/ai-statement-extractor.interface.ts` defines `IAiStatementExtractor` with `analyseAndExtractTransactions()`. The OpenAI implementation lives in `src/infra/ai/openai-statement-extractor.ts`. Business logic is in `src/services/statement-processor.service.ts` — it depends only on the interface, not on OpenAI directly. `AiExtractionResult` uses `valid: boolean` (not exceptions) to signal unparseable responses (e.g. invalid image → status 9).
 
 **card_statements full flow:**
 - `POST /api/cards/:cardId/statements` — multipart/form-data with `year_reference`, `month_reference`, `total` (optional) + files under key `images`
 - Creates statement (status=1 pending), saves images to `$UPLOAD_DIR/{userId}/{statementId}/`, creates `card_statement_images` records, updates status to `2=sent`
 - Creates a `jobs` record and publishes `{ statementId }` to exchange `events` routing key `statement-ai-process`
 - `worker-statement-processor-ai` consumes `events.statement-ai-process`, calls OpenAI Vision (`gpt-4.1-mini`), saves to `card_transactions`, writes to `audit_logs`, updates both `card_statements.status_id` and `jobs.status_id` atomically
-- `worker-dlq` consumes `queue.dlq.all`, sets status to `6=dlq` on both tables, creates `fail_jobs` and `audit_logs` records
-- **TODO:** send alert email to `DEVELOPER_EMAIL` via Nodemailer in `dlq.worker.ts`
+- `worker-dlq` consumes `queue.dlq.all`, sets status to `6=dlq` on both tables, creates `fail_jobs` and `audit_logs` records, sends alert email to `DEVELOPER_EMAIL` via `NodemailerEmailProvider` (email failure only logs, does not rethrow)
 
 **processing_status reference table (no CRUD):**
 ```
@@ -69,6 +75,8 @@ Delete on card_statements allowed only on status: 1, 4, 6, 7, 9.
 RABBITMQ_STATEMENT_AI_MAX_RETRIES   # default 3
 RABBITMQ_STATEMENT_AI_RETRY_DELAY   # default 5000 (ms)
 OPENAI_API_KEY
+DEVELOPER_EMAIL                     # alert email recipient (DLQ worker)
+SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  # Nodemailer SMTP config
 ```
 
 **needs_review logic:** compares `statement.total` against `SUM(parcel_value)` extracted from the statement. Tolerance: R$10. If diff > 10 → status `7=needs_review`, otherwise `4=success`.
@@ -84,7 +92,10 @@ REDIS_HOST, REDIS_PORT, REDIS_PASS,
 UPLOAD_DIR,
 JWT_SECRET, JWT_EXPIRES_IN,
 OPENAI_API_KEY,
-RABBITMQ_STATEMENT_AI_MAX_RETRIES, RABBITMQ_STATEMENT_AI_RETRY_DELAY
+RABBITMQ_STATEMENT_AI_MAX_RETRIES, RABBITMQ_STATEMENT_AI_RETRY_DELAY,
+STATEMENT_RATE_LIMIT_MAX,          # default 5 (requests per window)
+STATEMENT_RATE_LIMIT_TTL,          # default 3600 (seconds)
+DEVELOPER_EMAIL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
 ```
 
 TypeORM `synchronize` is disabled — all schema changes must go through migrations.
