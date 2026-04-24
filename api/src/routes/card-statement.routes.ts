@@ -83,6 +83,12 @@ router.use('/cards/:cardId/statements', authMiddleware);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: Too many requests
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   get:
  *     summary: List statements for a card
  *     tags: [Card Statements]
