@@ -2,6 +2,8 @@ import express from "express";
 import { CardStatementController } from "../controllers/card-statement.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { upload, handleUploadErrors } from "../middlewares/upload.middleware";
+import { rateLimit } from "../middlewares/redis-rate-limi.middleware";
+import { RedisRateLimitProvider } from "../infra/cache/redis-rate-limit.provider";
 
 const router = express.Router();
 const controller = new CardStatementController();
@@ -114,7 +116,17 @@ router.use('/cards/:cardId/statements', authMiddleware);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/cards/:cardId/statements', upload.array('images'), handleUploadErrors, controller.create.bind(controller));
+router.post('/cards/:cardId/statements',
+    rateLimit(
+        new RedisRateLimitProvider(),
+        Number(process.env.STATEMENT_RATE_LIMIT_MAX ?? 5),
+        Number(process.env.STATEMENT_RATE_LIMIT_TTL ?? 3600),
+        (req) => `statement_upload:${req.userId}`,
+    ),
+    upload.array('images'),
+    handleUploadErrors,
+    controller.create.bind(controller),
+);
 router.get('/cards/:cardId/statements', controller.findAll.bind(controller));
 
 /**

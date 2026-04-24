@@ -4,10 +4,11 @@ import { IRateLimitProvider } from '../contracts/rate-limit-provider.interface';
 export function rateLimit(
   provider: IRateLimitProvider,
   maxRequests: number,
-  ttl: number) {
+  ttl: number,
+  keyFn: (req: Request) => string = (req) => req.ip!,
+) {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const ip = req.ip;
-    const key = `rate_limit:${ip}`;
+    const key = `rate_limit:${keyFn(req)}`;
 
     const requests = await provider.incr(key);
 
