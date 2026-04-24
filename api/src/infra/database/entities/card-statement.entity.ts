@@ -41,6 +41,9 @@ export class CardStatement {
     })
     total!: number | null;
 
+    @Column({ name: 'ip_address', type: 'varchar', length: 45, nullable: true, default: null })
+    ip_address!: string | null;
+
     @CreateDateColumn()
     created_at!: Date;
 

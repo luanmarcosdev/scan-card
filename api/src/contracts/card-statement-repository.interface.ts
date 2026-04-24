@@ -6,7 +6,7 @@ export interface ICardStatementRepository {
     findAll(userId: string, cardId: string): Promise<CardStatement[]>;
     findById(id: string): Promise<CardStatement | null>;
     findByIdAndUserId(id: string, userId: string): Promise<CardStatement | null>;
-    create(data: CreateCardStatementDto, userId: string, cardId: string): Promise<CardStatement>;
+    create(data: CreateCardStatementDto, userId: string, cardId: string, ip?: string): Promise<CardStatement>;
     update(id: string, data: UpdateCardStatementDto): Promise<CardStatement | null>;
     updateStatus(id: string, statusId: number): Promise<void>;
     delete(id: string): Promise<void>;

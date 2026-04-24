@@ -69,7 +69,7 @@ export class CardStatementController {
                 buffer: f.buffer,
             }));
 
-            const statement = await service.create(req.userId, req.params.cardId, dto, files);
+            const statement = await service.create(req.userId, req.params.cardId, dto, files, req.ip);
             const response: IResponse<CardStatementResponseDto> = {
                 status: 202,
                 message: 'Card statement created and queued for processing',

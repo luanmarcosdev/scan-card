@@ -49,6 +49,7 @@ export class StatementProcessorService {
                 raw_response: result.rawResponse,
                 transactions_extracted: 0,
                 status_id: 9,
+                ip_address: statement.ip_address ?? null,
             });
             console.log(`[INFO]: Statement ${statementId} — invalid image, status set to 9`);
             return;
@@ -83,6 +84,7 @@ export class StatementProcessorService {
             raw_response: result.rawResponse,
             transactions_extracted: result.transactions.length,
             status_id: finalStatus,
+            ip_address: statement.ip_address ?? undefined,
         });
 
         console.log(`[INFO]: Statement ${statementId} processed — status: ${finalStatus}, transactions: ${result.transactions.length}`);

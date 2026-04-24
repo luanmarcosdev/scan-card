@@ -63,7 +63,7 @@ export class CardStatementService {
         return statement;
     }
 
-    async create(userId: string, cardId: string, data: CreateCardStatementDto, files: ImageFile[]): Promise<CardStatement> {
+    async create(userId: string, cardId: string, data: CreateCardStatementDto, files: ImageFile[], ip?: string): Promise<CardStatement> {
         const card = await this.cardRepository.findByIdAndUserId(cardId, userId);
 
         if (!card) {
@@ -86,7 +86,7 @@ export class CardStatementService {
             });
         }
 
-        const statement = await this.statementRepository.create(data, userId, cardId);
+        const statement = await this.statementRepository.create(data, userId, cardId, ip);
 
         const imagePaths: Array<{ card_statement_id: string; image_path: string }> = [];
 

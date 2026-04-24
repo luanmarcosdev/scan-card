@@ -4,12 +4,14 @@ import { AppDataSource } from '../infra/database/data-source';
 import { JobRepositoryMySQL } from '../repositories/job.repository.mysql';
 import { FailJobRepositoryMySQL } from '../repositories/fail-job.repository.mysql';
 import { AuditLogRepositoryMySQL } from '../repositories/audit-log.repository.mysql';
+import { CardStatementRepositoryMySQL } from '../repositories/card-statement.repository.mysql';
 
 const DLQ_QUEUE = 'queue.dlq.all';
 
 const jobRepo = new JobRepositoryMySQL();
 const failJobRepo = new FailJobRepositoryMySQL();
 const auditRepo = new AuditLogRepositoryMySQL();
+const statementRepo = new CardStatementRepositoryMySQL();
 
 async function processDLQMessage(raw: string, headers: Record<string, any>): Promise<void> {
     const payload = JSON.parse(raw) as { statementId?: string };
@@ -34,6 +36,7 @@ async function processDLQMessage(raw: string, headers: Record<string, any>): Pro
         });
 
         if (statementId) {
+            const statement = await statementRepo.findById(statementId);
             await auditRepo.create({
                 statement_id: statementId,
                 input_tokens: null,
@@ -41,6 +44,7 @@ async function processDLQMessage(raw: string, headers: Record<string, any>): Pro
                 raw_response: { error: errorMessage, retries },
                 transactions_extracted: null,
                 status_id: 8,
+                ip_address: statement?.ip_address ?? null,
             });
         }
 

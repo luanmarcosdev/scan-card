@@ -18,6 +18,7 @@ const mockStatement: CardStatement = {
     year_reference: 2026,
     month_reference: 4,
     total: 100.00,
+    ip_address: '127.0.0.1',
     created_at: new Date('2026-01-01'),
     updated_at: null,
     deleted_at: null,

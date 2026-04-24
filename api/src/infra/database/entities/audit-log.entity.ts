@@ -25,6 +25,9 @@ export class AuditLog {
     @Column({ name: 'status_id', type: 'int' })
     status_id!: number;
 
+    @Column({ name: 'ip_address', type: 'varchar', length: 45, nullable: true, default: null })
+    ip_address!: string | null;
+
     @CreateDateColumn()
     created_at!: Date;
 

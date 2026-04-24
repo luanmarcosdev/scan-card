@@ -21,8 +21,8 @@ export class CardStatementRepositoryMySQL implements ICardStatementRepository {
         return this.repo.findOneBy({ id, user_id: userId });
     }
 
-    async create(data: CreateCardStatementDto, userId: string, cardId: string): Promise<CardStatement> {
-        return this.repo.save({ ...data, user_id: userId, card_id: cardId });
+    async create(data: CreateCardStatementDto, userId: string, cardId: string, ip?: string): Promise<CardStatement> {
+        return this.repo.save({ ...data, user_id: userId, card_id: cardId, ip_address: ip ?? null });
     }
 
     async update(id: string, data: UpdateCardStatementDto): Promise<CardStatement | null> {
