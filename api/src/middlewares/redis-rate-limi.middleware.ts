@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { IRateLimitProvider } from '../contracts/rate-limit-provider.interface';
+import { formatSeconds } from '../utils/format-seconds.util';
 
 export function rateLimit(
   provider: IRateLimitProvider,
@@ -17,11 +18,15 @@ export function rateLimit(
     }
 
     if (requests > maxRequests) {
+      const retryAfter = await provider.ttl(key);
       return res.status(429).json({
         status: 429,
         message: 'Too many requests',
-        method: req.method,
-        path: req.path
+        errors_detail: {
+          limit: maxRequests,
+          window: formatSeconds(ttl),
+          retry_after_seconds: retryAfter,
+        },
       });
     }
 

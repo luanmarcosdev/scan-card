@@ -8,5 +8,8 @@ export class RedisRateLimitProvider implements IRateLimitProvider {
     async expire(key: string, ttlSeconds: number): Promise<void> {
         await redisClient.expire(key, ttlSeconds);
     }
+    async ttl(key: string): Promise<number> {
+        return await redisClient.ttl(key);
+    }
 }
 
