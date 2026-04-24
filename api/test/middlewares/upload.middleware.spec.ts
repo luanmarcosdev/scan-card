@@ -1,15 +1,15 @@
 import request from 'supertest';
 import express, { Request, Response, NextFunction } from 'express';
-import { upload } from '../../src/middlewares/upload.middleware';
+import { upload, handleUploadErrors } from '../../src/middlewares/upload.middleware';
 
 const app = express();
 
-app.post('/test', upload.array('images'), (_req: Request, res: Response) => {
+app.post('/test', upload.array('images'), handleUploadErrors, (_req: Request, res: Response) => {
     res.status(200).json({ ok: true });
 });
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    res.status(400).json({ code: err.code ?? 'ERROR', message: err.message });
+    res.status(err.status ?? 500).json({ message: err.message, errors_detail: err.errors ?? null });
 });
 
 describe('upload middleware', () => {
@@ -31,7 +31,7 @@ describe('upload middleware', () => {
             .attach('images', oversized, { filename: 'big.jpg', contentType: 'image/jpeg' });
 
         expect(res.status).toBe(400);
-        expect(res.body.code).toBe('LIMIT_FILE_SIZE');
+        expect(res.body.errors_detail.max_size).toBe('3MB');
     });
 
     it('should reject invalid file extension', async () => {
@@ -66,6 +66,6 @@ describe('upload middleware', () => {
 
         const res = await req;
         expect(res.status).toBe(400);
-        expect(res.body.code).toBe('LIMIT_FILE_COUNT');
+        expect(res.body.errors_detail.max_files).toBe('8');
     });
 });
