@@ -5,6 +5,7 @@ import { JobRepositoryMySQL } from '../repositories/job.repository.mysql';
 import { FailJobRepositoryMySQL } from '../repositories/fail-job.repository.mysql';
 import { AuditLogRepositoryMySQL } from '../repositories/audit-log.repository.mysql';
 import { CardStatementRepositoryMySQL } from '../repositories/card-statement.repository.mysql';
+import { NodemailerEmailProvider } from '../infra/mail/nodemailer-email.provider';
 
 const DLQ_QUEUE = 'queue.dlq.all';
 
@@ -12,6 +13,7 @@ const jobRepo = new JobRepositoryMySQL();
 const failJobRepo = new FailJobRepositoryMySQL();
 const auditRepo = new AuditLogRepositoryMySQL();
 const statementRepo = new CardStatementRepositoryMySQL();
+const emailProvider = new NodemailerEmailProvider();
 
 async function processDLQMessage(raw: string, headers: Record<string, any>): Promise<void> {
     const payload = JSON.parse(raw) as { statementId?: string };
@@ -49,11 +51,23 @@ async function processDLQMessage(raw: string, headers: Record<string, any>): Pro
         }
 
         console.error(`[DLQ]: Statement ${statementId} — job ${job.id} moved to fail_jobs after ${retries} retries`);
+
+        const developerEmail = process.env.DEVELOPER_EMAIL;
+        if (developerEmail) {
+            try {
+                await emailProvider.sendAlert(
+                    developerEmail,
+                    `[DLQ Alert] Statement ${statementId} failed after ${retries} retries`,
+                    `Statement ID: ${statementId}\nJob ID: ${job.id}\nRetries: ${retries}\nError: ${errorMessage}`,
+                );
+            } catch (emailErr) {
+                console.error('[DLQ]: Failed to send alert email:', emailErr);
+            }
+        }
     } else {
         console.error(`[DLQ]: Received message without recognizable job. Payload: ${raw}`);
     }
 
-    // TODO: send alert email to DEVELOPER_EMAIL via Nodemailer
 }
 
 async function startWorker() {
