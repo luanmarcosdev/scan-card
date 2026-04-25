@@ -209,6 +209,7 @@ const options: swaggerJsdoc.Options = {
                 total_installments: { type: 'number', example: 1200.00 },
                 total_due: { type: 'number', example: 1500.00 },
                 installments_salary_ratio: { type: 'number', nullable: true, example: 24.00, description: 'Percentage of salary spent on installments' },
+                statements_count: { type: 'integer', example: 2, description: 'Number of statements included in this analysis' },
                 statements_needing_review: { type: 'integer', example: 1, description: 'Number of statements with status needs_review' },
               },
             },

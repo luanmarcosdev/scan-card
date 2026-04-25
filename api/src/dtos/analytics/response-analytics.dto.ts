@@ -14,6 +14,7 @@ export interface AnalyticsResponseDto {
         total_installments: number;
         total_due: number;
         installments_salary_ratio: number | null;
+        statements_count: number;
         statements_needing_review: number;
     };
     transactions: {

@@ -31,6 +31,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
         const stQuery = AppDataSource.createQueryBuilder()
             .select([
                 'COALESCE(SUM(cs.total), 0) as total_due',
+                'COUNT(cs.id) as statements_count',
                 'COUNT(CASE WHEN cs.status_id = 7 THEN 1 END) as statements_needing_review',
             ])
             .from('card_statements', 'cs')
@@ -49,6 +50,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
             cash_total: parseFloat(txResult.cash_total) || 0,
             installment_count: parseInt(txResult.installment_count) || 0,
             installment_total: parseFloat(txResult.installment_total) || 0,
+            statements_count: parseInt(stResult.statements_count) || 0,
             statements_needing_review: parseInt(stResult.statements_needing_review) || 0,
         };
     }

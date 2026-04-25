@@ -45,6 +45,7 @@ export class AnalyticsService {
                 total_installments: general.total_installments,
                 total_due: general.total_due,
                 installments_salary_ratio,
+                statements_count: general.statements_count,
                 statements_needing_review: general.statements_needing_review,
             },
             transactions: {

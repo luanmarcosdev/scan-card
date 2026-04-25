@@ -24,6 +24,7 @@ const mockGeneralMetrics: GeneralMetrics = {
     cash_total: 300,
     installment_count: 7,
     installment_total: 900,
+    statements_count: 2,
     statements_needing_review: 1,
 };
 
@@ -70,6 +71,7 @@ describe('AnalyticsService', () => {
             expect(result.general.salary).toBe(5000);
             expect(result.general.total_installments).toBe(1200);
             expect(result.general.total_due).toBe(1500);
+            expect(result.general.statements_count).toBe(2);
             expect(result.general.statements_needing_review).toBe(1);
             expect(result.transactions.count).toBe(10);
             expect(result.transactions.by_category[0].salary_ratio).toBe(16.00);

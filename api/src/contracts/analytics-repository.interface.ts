@@ -14,6 +14,7 @@ export interface GeneralMetrics {
     cash_total: number;
     installment_count: number;
     installment_total: number;
+    statements_count: number;
     statements_needing_review: number;
 }
 
