@@ -16,6 +16,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
 
   mysql:
     image: mysql:8.0
