@@ -2,6 +2,7 @@ import { AnalyticsService } from '../../src/services/analytics.service';
 import { IAnalyticsRepository, GeneralMetrics, CategoryMetric, ExpiringMetrics, PurchaseTransactionRaw } from '../../src/contracts/analytics-repository.interface';
 import { IUserRepository } from '../../src/contracts/user-repository.interface';
 import { User } from '../../src/infra/database/entities/user.entity';
+import { QueryAnalyticsTransactionsDto } from '../../src/dtos/analytics/query-analytics-transactions.dto';
 
 const mockUser: User = {
     id: 'user-uuid',
@@ -82,11 +83,8 @@ describe('AnalyticsService', () => {
             expect(result.transactions.count).toBe(10);
             expect(result.transactions.by_category[0].salary_ratio).toBe(16.00);
             expect(result.transactions.by_category[0].due_ratio).toBe(53.33);
-            expect(result.transactions.by_category[0].transactions).toHaveLength(1);
-            expect(result.transactions.by_category[0].transactions[0].transaction_id).toBe('tx-1');
             expect(result.transactions.by_category[1].salary_ratio).toBe(8.00);
             expect(result.transactions.by_category[1].due_ratio).toBe(26.67);
-            expect(result.transactions.by_category[1].transactions[0].transaction_id).toBe('tx-2');
             expect(result.purchases.cash.count).toBe(3);
             expect(result.purchases.installments.count).toBe(7);
             expect(result.purchases.ends_this_month.count).toBe(2);
@@ -198,6 +196,105 @@ describe('AnalyticsService', () => {
             expect(analyticsRepo.getGeneralMetrics).toHaveBeenCalledWith(expectedFilters);
             expect(analyticsRepo.getByCategory).toHaveBeenCalledWith(expectedFilters);
             expect(analyticsRepo.getExpiringPurchases).toHaveBeenCalledWith(expectedFilters, 2026, 5);
+        });
+    });
+
+    describe('getTransactions', () => {
+        it('should return all transactions when no type is provided', async () => {
+            const result = await service.getTransactions('user-uuid', {} as QueryAnalyticsTransactionsDto);
+
+            expect(result).toHaveLength(2);
+            expect(result[0]).not.toHaveProperty('lastParcelMonthNum');
+            expect(result[0]).not.toHaveProperty('expense_category_id');
+        });
+
+        it('should return only cash transactions when type is cash', async () => {
+            const result = await service.getTransactions('user-uuid', { type: 'cash' } as QueryAnalyticsTransactionsDto);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].transaction_id).toBe('tx-1');
+            expect(result[0].parcels).toBe(1);
+        });
+
+        it('should return only installment transactions when type is installments', async () => {
+            const result = await service.getTransactions('user-uuid', { type: 'installments' } as QueryAnalyticsTransactionsDto);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].transaction_id).toBe('tx-2');
+            expect(result[0].parcels).toBe(3);
+        });
+
+        it('should filter ends_this_month based on refMonthNum', async () => {
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date('2026-04-15'));
+
+            analyticsRepo.getTransactions.mockResolvedValue([
+                { ...mockTransactions[0], lastParcelMonthNum: 2026 * 12 + 4 },
+                { ...mockTransactions[1], lastParcelMonthNum: 2026 * 12 + 5 },
+            ]);
+
+            const result = await service.getTransactions('user-uuid', { type: 'ends_this_month' } as QueryAnalyticsTransactionsDto);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].transaction_id).toBe('tx-1');
+
+            jest.useRealTimers();
+        });
+
+        it('should filter ends_next_month correctly', async () => {
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date('2026-04-15'));
+
+            analyticsRepo.getTransactions.mockResolvedValue([
+                { ...mockTransactions[0], lastParcelMonthNum: 2026 * 12 + 4 },
+                { ...mockTransactions[1], lastParcelMonthNum: 2026 * 12 + 5 },
+            ]);
+
+            const result = await service.getTransactions('user-uuid', { type: 'ends_next_month' } as QueryAnalyticsTransactionsDto);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].transaction_id).toBe('tx-2');
+
+            jest.useRealTimers();
+        });
+
+        it('should filter ends_within_3_months correctly', async () => {
+            jest.useFakeTimers();
+            jest.setSystemTime(new Date('2026-04-15'));
+
+            analyticsRepo.getTransactions.mockResolvedValue([
+                { ...mockTransactions[0], lastParcelMonthNum: 2026 * 12 + 6 },
+                { ...mockTransactions[1], lastParcelMonthNum: 2026 * 12 + 5 },
+            ]);
+
+            const result = await service.getTransactions('user-uuid', { type: 'ends_within_3_months' } as QueryAnalyticsTransactionsDto);
+
+            expect(result).toHaveLength(1);
+            expect(result[0].transaction_id).toBe('tx-1');
+
+            jest.useRealTimers();
+        });
+
+        it('should use month/year from dto as reference for ends_* types', async () => {
+            await service.getTransactions('user-uuid', { month: 3, year: 2025, type: 'ends_this_month' } as QueryAnalyticsTransactionsDto);
+
+            expect(analyticsRepo.getTransactions).toHaveBeenCalledWith(
+                expect.objectContaining({ month: 3, year: 2025 }),
+            );
+        });
+
+        it('should pass filters correctly to repository', async () => {
+            const dto = { card_id: 'card-uuid', month: 5, year: 2026, category_id: 'cat-uuid' } as QueryAnalyticsTransactionsDto;
+
+            await service.getTransactions('user-uuid', dto);
+
+            expect(analyticsRepo.getTransactions).toHaveBeenCalledWith({
+                userId: 'user-uuid',
+                cardId: 'card-uuid',
+                month: 5,
+                year: 2026,
+                categoryId: 'cat-uuid',
+            });
         });
     });
 });

@@ -1,7 +1,8 @@
 import { IAnalyticsRepository } from '../contracts/analytics-repository.interface';
 import { IUserRepository } from '../contracts/user-repository.interface';
 import { QueryAnalyticsDto } from '../dtos/analytics/query-analytics.dto';
-import { AnalyticsResponseDto } from '../dtos/analytics/response-analytics.dto';
+import { QueryAnalyticsTransactionsDto } from '../dtos/analytics/query-analytics-transactions.dto';
+import { AnalyticsResponseDto, PurchaseTransactionDto } from '../dtos/analytics/response-analytics.dto';
 
 export class AnalyticsService {
 
@@ -23,12 +24,11 @@ export class AnalyticsService {
             categoryId: dto.category_id,
         };
 
-        const [user, general, byCategory, expiring, allTransactions] = await Promise.all([
+        const [user, general, byCategory, expiring] = await Promise.all([
             this.userRepo.findById(userId),
             this.analyticsRepo.getGeneralMetrics(filters),
             this.analyticsRepo.getByCategory(filters),
             this.analyticsRepo.getExpiringPurchases(filters, refYear, refMonth),
-            this.analyticsRepo.getTransactions(filters),
         ]);
 
         const salary = user?.salary ?? null;
@@ -39,21 +39,6 @@ export class AnalyticsService {
         const avg_value = general.count_transactions > 0
             ? parseFloat((general.total_installments / general.count_transactions).toFixed(2))
             : 0;
-
-        const refMonthNum = refYear * 12 + refMonth;
-
-        const toItem = ({ lastParcelMonthNum: _, expense_category_id: __, ...t }: typeof allTransactions[0]) => t;
-
-        const txByCategory = new Map<string, typeof allTransactions>();
-        for (const tx of allTransactions) {
-            const group = txByCategory.get(tx.expense_category_id) ?? [];
-            group.push(tx);
-            txByCategory.set(tx.expense_category_id, group);
-        }
-
-        const endsThisMonthTx = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum).map(toItem);
-        const endsNextMonthTx = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum + 1).map(toItem);
-        const endsWithin3MonthsTx = allTransactions.filter(t => t.lastParcelMonthNum >= refMonthNum + 2 && t.lastParcelMonthNum <= refMonthNum + 3).map(toItem);
 
         return {
             general: {
@@ -75,17 +60,44 @@ export class AnalyticsService {
                     due_ratio: general.total_due && c.total
                         ? parseFloat(((c.total / general.total_due) * 100).toFixed(2))
                         : null,
-                    transactions: (txByCategory.get(c.category_id) ?? []).map(toItem),
                 })),
             },
             purchases: {
                 cash: { count: general.cash_count, total: general.cash_total },
                 installments: { count: general.installment_count, total: general.installment_total },
-                ends_this_month: { ...expiring.ends_this_month, transactions: endsThisMonthTx },
-                ends_next_month: { ...expiring.ends_next_month, transactions: endsNextMonthTx },
-                ends_within_3_months: { ...expiring.ends_within_3_months, transactions: endsWithin3MonthsTx },
+                ends_this_month: expiring.ends_this_month,
+                ends_next_month: expiring.ends_next_month,
+                ends_within_3_months: expiring.ends_within_3_months,
             },
         };
+    }
+
+    async getTransactions(userId: string, dto: QueryAnalyticsTransactionsDto): Promise<PurchaseTransactionDto[]> {
+        const now = new Date();
+        const refYear = dto.year ?? now.getFullYear();
+        const refMonth = (dto.month && dto.year) ? dto.month : now.getMonth() + 1;
+        const refMonthNum = refYear * 12 + refMonth;
+
+        const filters = {
+            userId,
+            cardId: dto.card_id,
+            month: dto.month,
+            year: dto.year,
+            categoryId: dto.category_id,
+        };
+
+        const allTransactions = await this.analyticsRepo.getTransactions(filters);
+
+        const toItem = ({ lastParcelMonthNum: _, expense_category_id: __, ...t }: typeof allTransactions[0]) => t;
+
+        let filtered = allTransactions;
+        if (dto.type === 'cash') filtered = allTransactions.filter(t => t.parcels === 1);
+        else if (dto.type === 'installments') filtered = allTransactions.filter(t => t.parcels > 1);
+        else if (dto.type === 'ends_this_month') filtered = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum);
+        else if (dto.type === 'ends_next_month') filtered = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum + 1);
+        else if (dto.type === 'ends_within_3_months') filtered = allTransactions.filter(t => t.lastParcelMonthNum >= refMonthNum + 2 && t.lastParcelMonthNum <= refMonthNum + 3);
+
+        return filtered.map(toItem);
     }
 
 }

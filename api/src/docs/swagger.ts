@@ -212,7 +212,6 @@ const options: swaggerJsdoc.Options = {
             avg_value: { type: 'number' },
             salary_ratio: { type: 'number', nullable: true, description: 'Category total as % of salary' },
             due_ratio: { type: 'number', nullable: true, description: 'Category total as % of total_due' },
-            transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
           },
         },
         AnalyticsResponse: {
@@ -262,7 +261,6 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 2 },
                     total: { type: 'number', example: 150.00 },
-                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 ends_next_month: {
@@ -270,7 +268,6 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 3 },
                     total: { type: 'number', example: 200.00 },
-                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 ends_within_3_months: {
@@ -279,7 +276,6 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 4 },
                     total: { type: 'number', example: 350.00 },
-                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
               },
