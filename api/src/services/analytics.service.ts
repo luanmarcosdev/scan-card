@@ -23,11 +23,12 @@ export class AnalyticsService {
             categoryId: dto.category_id,
         };
 
-        const [user, general, byCategory, expiring] = await Promise.all([
+        const [user, general, byCategory, expiring, allTransactions] = await Promise.all([
             this.userRepo.findById(userId),
             this.analyticsRepo.getGeneralMetrics(filters),
             this.analyticsRepo.getByCategory(filters),
             this.analyticsRepo.getExpiringPurchases(filters, refYear, refMonth),
+            this.analyticsRepo.getTransactions(filters),
         ]);
 
         const salary = user?.salary ?? null;
@@ -38,6 +39,16 @@ export class AnalyticsService {
         const avg_value = general.count_transactions > 0
             ? parseFloat((general.total_installments / general.count_transactions).toFixed(2))
             : 0;
+
+        const refMonthNum = refYear * 12 + refMonth;
+
+        const toItem = ({ lastParcelMonthNum: _, ...t }: typeof allTransactions[0]) => t;
+
+        const cashTx = allTransactions.filter(t => t.parcels === 1).map(toItem);
+        const installmentsTx = allTransactions.filter(t => t.parcels > 1).map(toItem);
+        const endsThisMonthTx = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum).map(toItem);
+        const endsNextMonthTx = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum + 1).map(toItem);
+        const endsWithin3MonthsTx = allTransactions.filter(t => t.lastParcelMonthNum >= refMonthNum + 2 && t.lastParcelMonthNum <= refMonthNum + 3).map(toItem);
 
         return {
             general: {
@@ -62,11 +73,11 @@ export class AnalyticsService {
                 })),
             },
             purchases: {
-                cash: { count: general.cash_count, total: general.cash_total },
-                installments: { count: general.installment_count, total: general.installment_total },
-                ends_this_month: expiring.ends_this_month,
-                ends_next_month: expiring.ends_next_month,
-                ends_within_3_months: expiring.ends_within_3_months,
+                cash: { count: general.cash_count, total: general.cash_total, transactions: cashTx },
+                installments: { count: general.installment_count, total: general.installment_total, transactions: installmentsTx },
+                ends_this_month: { ...expiring.ends_this_month, transactions: endsThisMonthTx },
+                ends_next_month: { ...expiring.ends_next_month, transactions: endsNextMonthTx },
+                ends_within_3_months: { ...expiring.ends_within_3_months, transactions: endsWithin3MonthsTx },
             },
         };
     }

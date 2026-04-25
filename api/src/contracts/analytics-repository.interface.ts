@@ -26,6 +26,20 @@ export interface CategoryMetric {
     avg_value: number;
 }
 
+export interface PurchaseTransactionItem {
+    transaction_id: string;
+    card_id: string;
+    card_last_numbers: string;
+    card_name: string | null;
+    parcels: number;
+    current_parcel: number;
+    parcel_value: number | null;
+}
+
+export interface PurchaseTransactionRaw extends PurchaseTransactionItem {
+    lastParcelMonthNum: number;
+}
+
 export interface PurchaseGroup {
     count: number;
     total: number;
@@ -41,4 +55,5 @@ export interface IAnalyticsRepository {
     getGeneralMetrics(filters: AnalyticsFilters): Promise<GeneralMetrics>;
     getByCategory(filters: AnalyticsFilters): Promise<CategoryMetric[]>;
     getExpiringPurchases(filters: AnalyticsFilters, refYear: number, refMonth: number): Promise<ExpiringMetrics>;
+    getTransactions(filters: AnalyticsFilters): Promise<PurchaseTransactionRaw[]>;
 }

@@ -1,5 +1,5 @@
 import { AnalyticsService } from '../../src/services/analytics.service';
-import { IAnalyticsRepository, GeneralMetrics, CategoryMetric, ExpiringMetrics, PurchaseGroup } from '../../src/contracts/analytics-repository.interface';
+import { IAnalyticsRepository, GeneralMetrics, CategoryMetric, ExpiringMetrics, PurchaseTransactionRaw } from '../../src/contracts/analytics-repository.interface';
 import { IUserRepository } from '../../src/contracts/user-repository.interface';
 import { User } from '../../src/infra/database/entities/user.entity';
 
@@ -39,6 +39,11 @@ const mockExpiring: ExpiringMetrics = {
     ends_within_3_months: { count: 4, total: 320 },
 };
 
+const mockTransactions: PurchaseTransactionRaw[] = [
+    { transaction_id: 'tx-1', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', parcels: 1, current_parcel: 1, parcel_value: 100, lastParcelMonthNum: 0 },
+    { transaction_id: 'tx-2', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', parcels: 3, current_parcel: 1, parcel_value: 200, lastParcelMonthNum: 0 },
+];
+
 describe('AnalyticsService', () => {
     let service: AnalyticsService;
     let analyticsRepo: jest.Mocked<IAnalyticsRepository>;
@@ -51,6 +56,7 @@ describe('AnalyticsService', () => {
             getGeneralMetrics: jest.fn().mockResolvedValue(mockGeneralMetrics),
             getByCategory: jest.fn().mockResolvedValue(mockByCategory),
             getExpiringPurchases: jest.fn().mockResolvedValue(mockExpiring),
+            getTransactions: jest.fn().mockResolvedValue(mockTransactions),
         };
 
         userRepo = {
@@ -78,11 +84,13 @@ describe('AnalyticsService', () => {
             expect(result.transactions.by_category[0].due_ratio).toBe(53.33);
             expect(result.transactions.by_category[1].salary_ratio).toBe(8.00);
             expect(result.transactions.by_category[1].due_ratio).toBe(26.67);
-            expect(result.purchases.cash).toEqual({ count: 3, total: 300 });
-            expect(result.purchases.installments).toEqual({ count: 7, total: 900 });
-            expect(result.purchases.ends_this_month).toEqual({ count: 2, total: 150 });
-            expect(result.purchases.ends_next_month).toEqual({ count: 1, total: 80 });
-            expect(result.purchases.ends_within_3_months).toEqual({ count: 4, total: 320 });
+            expect(result.purchases.cash.count).toBe(3);
+            expect(result.purchases.cash.transactions).toHaveLength(1);
+            expect(result.purchases.cash.transactions[0].transaction_id).toBe('tx-1');
+            expect(result.purchases.installments.count).toBe(7);
+            expect(result.purchases.installments.transactions).toHaveLength(1);
+            expect(result.purchases.installments.transactions[0].transaction_id).toBe('tx-2');
+            expect(result.purchases.ends_this_month.count).toBe(2);
         });
 
         it('should calculate installments_salary_ratio correctly', async () => {

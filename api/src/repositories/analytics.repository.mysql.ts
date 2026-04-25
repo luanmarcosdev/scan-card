@@ -5,6 +5,7 @@ import {
     GeneralMetrics,
     CategoryMetric,
     ExpiringMetrics,
+    PurchaseTransactionRaw,
 } from '../contracts/analytics-repository.interface';
 
 export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
@@ -115,6 +116,41 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
             ends_next_month: { count: parseInt(r.next_count) || 0, total: parseFloat(r.next_total) || 0 },
             ends_within_3_months: { count: parseInt(r.within3_count) || 0, total: parseFloat(r.within3_total) || 0 },
         };
+    }
+
+    async getTransactions(filters: AnalyticsFilters): Promise<PurchaseTransactionRaw[]> {
+        const query = AppDataSource.createQueryBuilder()
+            .select([
+                'ct.id as transaction_id',
+                'c.id as card_id',
+                'c.last_numbers as card_last_numbers',
+                'c.name as card_name',
+                'ct.parcels as parcels',
+                'ct.current_parcel as current_parcel',
+                'ct.parcel_value as parcel_value',
+                '(cs.year_reference * 12 + cs.month_reference + (ct.parcels - ct.current_parcel)) as last_parcel_month_num',
+            ])
+            .from('card_transactions', 'ct')
+            .innerJoin('card_statements', 'cs', 'ct.card_statement_id = cs.id')
+            .innerJoin('cards', 'c', 'cs.card_id = c.id')
+            .where('ct.user_id = :userId', { userId: filters.userId })
+            .andWhere('ct.deleted_at IS NULL')
+            .andWhere('cs.deleted_at IS NULL');
+
+        this.applyPeriodFilters(query, filters);
+        if (filters.categoryId) query.andWhere('ct.expense_category_id = :categoryId', { categoryId: filters.categoryId });
+
+        const results = await query.getRawMany();
+        return results.map(r => ({
+            transaction_id: r.transaction_id,
+            card_id: r.card_id,
+            card_last_numbers: r.card_last_numbers,
+            card_name: r.card_name,
+            parcels: parseInt(r.parcels) || 0,
+            current_parcel: parseInt(r.current_parcel) || 0,
+            parcel_value: r.parcel_value !== null ? parseFloat(r.parcel_value) : null,
+            lastParcelMonthNum: parseInt(r.last_parcel_month_num) || 0,
+        }));
     }
 
     private applyPeriodFilters(query: any, filters: AnalyticsFilters, includeCard = true): void {

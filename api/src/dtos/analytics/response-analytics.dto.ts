@@ -8,6 +8,22 @@ export interface CategoryBreakdownDto {
     due_ratio: number | null;
 }
 
+export interface PurchaseTransactionDto {
+    transaction_id: string;
+    card_id: string;
+    card_last_numbers: string;
+    card_name: string | null;
+    parcels: number;
+    current_parcel: number;
+    parcel_value: number | null;
+}
+
+export interface PurchaseGroupDto {
+    count: number;
+    total: number;
+    transactions: PurchaseTransactionDto[];
+}
+
 export interface AnalyticsResponseDto {
     general: {
         salary: number | null;
@@ -23,10 +39,10 @@ export interface AnalyticsResponseDto {
         by_category: CategoryBreakdownDto[];
     };
     purchases: {
-        cash: { count: number; total: number };
-        installments: { count: number; total: number };
-        ends_this_month: { count: number; total: number };
-        ends_next_month: { count: number; total: number };
-        ends_within_3_months: { count: number; total: number };
+        cash: PurchaseGroupDto;
+        installments: PurchaseGroupDto;
+        ends_this_month: PurchaseGroupDto;
+        ends_next_month: PurchaseGroupDto;
+        ends_within_3_months: PurchaseGroupDto;
     };
 }

@@ -187,6 +187,18 @@ const options: swaggerJsdoc.Options = {
             updated_at: { type: 'string', format: 'date-time', nullable: true },
           },
         },
+        PurchaseTransaction: {
+          type: 'object',
+          properties: {
+            transaction_id: { type: 'string', format: 'uuid' },
+            card_id: { type: 'string', format: 'uuid' },
+            card_last_numbers: { type: 'string', example: '1234' },
+            card_name: { type: 'string', nullable: true, example: 'Nubank' },
+            parcels: { type: 'integer', example: 6 },
+            current_parcel: { type: 'integer', example: 3 },
+            parcel_value: { type: 'number', nullable: true, example: 50.00 },
+          },
+        },
         CategoryBreakdown: {
           type: 'object',
           properties: {
@@ -232,6 +244,7 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 5 },
                     total: { type: 'number', example: 300.00 },
+                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 installments: {
@@ -239,6 +252,7 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 10 },
                     total: { type: 'number', example: 900.00 },
+                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 ends_this_month: {
@@ -246,6 +260,7 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 2 },
                     total: { type: 'number', example: 150.00 },
+                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 ends_next_month: {
@@ -253,6 +268,7 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 3 },
                     total: { type: 'number', example: 200.00 },
+                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 ends_within_3_months: {
@@ -261,6 +277,7 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 4 },
                     total: { type: 'number', example: 350.00 },
+                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
               },
