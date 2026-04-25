@@ -1,8 +1,11 @@
 export interface CategoryBreakdownDto {
     category_id: string;
+    category_name: string;
     count: number;
     total: number;
     avg_value: number;
+    salary_ratio: number | null;
+    due_ratio: number | null;
 }
 
 export interface AnalyticsResponseDto {
@@ -19,10 +22,10 @@ export interface AnalyticsResponseDto {
         by_category: CategoryBreakdownDto[];
     };
     purchases: {
-        cash_count: number;
-        installment_count: number;
-        ends_this_month: number;
-        ends_next_month: number;
-        ends_within_3_months: number;
+        cash: { count: number; total: number };
+        installments: { count: number; total: number };
+        ends_this_month: { count: number; total: number };
+        ends_next_month: { count: number; total: number };
+        ends_within_3_months: { count: number; total: number };
     };
 }

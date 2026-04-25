@@ -1,5 +1,5 @@
 import { AnalyticsService } from '../../src/services/analytics.service';
-import { IAnalyticsRepository, GeneralMetrics, CategoryMetric, ExpiringMetrics } from '../../src/contracts/analytics-repository.interface';
+import { IAnalyticsRepository, GeneralMetrics, CategoryMetric, ExpiringMetrics, PurchaseGroup } from '../../src/contracts/analytics-repository.interface';
 import { IUserRepository } from '../../src/contracts/user-repository.interface';
 import { User } from '../../src/infra/database/entities/user.entity';
 
@@ -21,19 +21,21 @@ const mockGeneralMetrics: GeneralMetrics = {
     total_due: 1500,
     count_transactions: 10,
     cash_count: 3,
+    cash_total: 300,
     installment_count: 7,
+    installment_total: 900,
     statements_needing_review: 1,
 };
 
 const mockByCategory: CategoryMetric[] = [
-    { category_id: 'cat-uuid-1', count: 6, total: 800, avg_value: 133.33 },
-    { category_id: 'cat-uuid-2', count: 4, total: 400, avg_value: 100 },
+    { category_id: 'cat-uuid-1', category_name: 'Food', count: 6, total: 800, avg_value: 133.33 },
+    { category_id: 'cat-uuid-2', category_name: 'Transport', count: 4, total: 400, avg_value: 100 },
 ];
 
 const mockExpiring: ExpiringMetrics = {
-    ends_this_month: 2,
-    ends_next_month: 3,
-    ends_within_3_months: 5,
+    ends_this_month: { count: 2, total: 150 },
+    ends_next_month: { count: 1, total: 80 },
+    ends_within_3_months: { count: 4, total: 320 },
 };
 
 describe('AnalyticsService', () => {
@@ -70,12 +72,15 @@ describe('AnalyticsService', () => {
             expect(result.general.total_due).toBe(1500);
             expect(result.general.statements_needing_review).toBe(1);
             expect(result.transactions.count).toBe(10);
-            expect(result.transactions.by_category).toEqual(mockByCategory);
-            expect(result.purchases.cash_count).toBe(3);
-            expect(result.purchases.installment_count).toBe(7);
-            expect(result.purchases.ends_this_month).toBe(2);
-            expect(result.purchases.ends_next_month).toBe(3);
-            expect(result.purchases.ends_within_3_months).toBe(5);
+            expect(result.transactions.by_category[0].salary_ratio).toBe(16.00);
+            expect(result.transactions.by_category[0].due_ratio).toBe(53.33);
+            expect(result.transactions.by_category[1].salary_ratio).toBe(8.00);
+            expect(result.transactions.by_category[1].due_ratio).toBe(26.67);
+            expect(result.purchases.cash).toEqual({ count: 3, total: 300 });
+            expect(result.purchases.installments).toEqual({ count: 7, total: 900 });
+            expect(result.purchases.ends_this_month).toEqual({ count: 2, total: 150 });
+            expect(result.purchases.ends_next_month).toEqual({ count: 1, total: 80 });
+            expect(result.purchases.ends_within_3_months).toEqual({ count: 4, total: 320 });
         });
 
         it('should calculate installments_salary_ratio correctly', async () => {
@@ -91,6 +96,15 @@ describe('AnalyticsService', () => {
 
             expect(result.general.salary).toBeNull();
             expect(result.general.installments_salary_ratio).toBeNull();
+            expect(result.transactions.by_category[0].salary_ratio).toBeNull();
+        });
+
+        it('should return due_ratio as null when total_due is 0', async () => {
+            analyticsRepo.getGeneralMetrics.mockResolvedValue({ ...mockGeneralMetrics, total_due: 0 });
+
+            const result = await service.getAnalytics('user-uuid', {});
+
+            expect(result.transactions.by_category[0].due_ratio).toBeNull();
         });
 
         it('should return installments_salary_ratio as null when total_installments is 0', async () => {

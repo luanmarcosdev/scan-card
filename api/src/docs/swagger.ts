@@ -191,9 +191,12 @@ const options: swaggerJsdoc.Options = {
           type: 'object',
           properties: {
             category_id: { type: 'string', format: 'uuid' },
+            category_name: { type: 'string', example: 'Food' },
             count: { type: 'integer' },
             total: { type: 'number' },
             avg_value: { type: 'number' },
+            salary_ratio: { type: 'number', nullable: true, description: 'Category total as % of salary' },
+            due_ratio: { type: 'number', nullable: true, description: 'Category total as % of total_due' },
           },
         },
         AnalyticsResponse: {
@@ -223,11 +226,42 @@ const options: swaggerJsdoc.Options = {
             purchases: {
               type: 'object',
               properties: {
-                cash_count: { type: 'integer', example: 5 },
-                installment_count: { type: 'integer', example: 10 },
-                ends_this_month: { type: 'integer', example: 2 },
-                ends_next_month: { type: 'integer', example: 3 },
-                ends_within_3_months: { type: 'integer', example: 6 },
+                cash: {
+                  type: 'object',
+                  properties: {
+                    count: { type: 'integer', example: 5 },
+                    total: { type: 'number', example: 300.00 },
+                  },
+                },
+                installments: {
+                  type: 'object',
+                  properties: {
+                    count: { type: 'integer', example: 10 },
+                    total: { type: 'number', example: 900.00 },
+                  },
+                },
+                ends_this_month: {
+                  type: 'object',
+                  properties: {
+                    count: { type: 'integer', example: 2 },
+                    total: { type: 'number', example: 150.00 },
+                  },
+                },
+                ends_next_month: {
+                  type: 'object',
+                  properties: {
+                    count: { type: 'integer', example: 3 },
+                    total: { type: 'number', example: 200.00 },
+                  },
+                },
+                ends_within_3_months: {
+                  type: 'object',
+                  description: 'Purchases ending in months 2 and 3 from reference (excludes this and next month)',
+                  properties: {
+                    count: { type: 'integer', example: 4 },
+                    total: { type: 'number', example: 350.00 },
+                  },
+                },
               },
             },
           },

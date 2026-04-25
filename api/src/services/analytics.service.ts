@@ -50,11 +50,19 @@ export class AnalyticsService {
             transactions: {
                 count: general.count_transactions,
                 avg_value,
-                by_category: byCategory,
+                by_category: byCategory.map(c => ({
+                    ...c,
+                    salary_ratio: salary && c.total
+                        ? parseFloat(((c.total / salary) * 100).toFixed(2))
+                        : null,
+                    due_ratio: general.total_due && c.total
+                        ? parseFloat(((c.total / general.total_due) * 100).toFixed(2))
+                        : null,
+                })),
             },
             purchases: {
-                cash_count: general.cash_count,
-                installment_count: general.installment_count,
+                cash: { count: general.cash_count, total: general.cash_total },
+                installments: { count: general.installment_count, total: general.installment_total },
                 ends_this_month: expiring.ends_this_month,
                 ends_next_month: expiring.ends_next_month,
                 ends_within_3_months: expiring.ends_within_3_months,

@@ -11,21 +11,29 @@ export interface GeneralMetrics {
     total_due: number;
     count_transactions: number;
     cash_count: number;
+    cash_total: number;
     installment_count: number;
+    installment_total: number;
     statements_needing_review: number;
 }
 
 export interface CategoryMetric {
     category_id: string;
+    category_name: string;
     count: number;
     total: number;
     avg_value: number;
 }
 
+export interface PurchaseGroup {
+    count: number;
+    total: number;
+}
+
 export interface ExpiringMetrics {
-    ends_this_month: number;
-    ends_next_month: number;
-    ends_within_3_months: number;
+    ends_this_month: PurchaseGroup;
+    ends_next_month: PurchaseGroup;
+    ends_within_3_months: PurchaseGroup;
 }
 
 export interface IAnalyticsRepository {
