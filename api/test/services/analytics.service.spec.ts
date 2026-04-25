@@ -40,8 +40,8 @@ const mockExpiring: ExpiringMetrics = {
 };
 
 const mockTransactions: PurchaseTransactionRaw[] = [
-    { transaction_id: 'tx-1', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', parcels: 1, current_parcel: 1, parcel_value: 100, lastParcelMonthNum: 0 },
-    { transaction_id: 'tx-2', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', parcels: 3, current_parcel: 1, parcel_value: 200, lastParcelMonthNum: 0 },
+    { transaction_id: 'tx-1', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', merchant: 'Amazon', transaction_date: '2026-04-10', parcels: 1, current_parcel: 1, parcel_value: 100, total_value: 100, expense_category_id: 'cat-uuid-1', lastParcelMonthNum: 0 },
+    { transaction_id: 'tx-2', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', merchant: 'Netflix', transaction_date: '2026-04-01', parcels: 3, current_parcel: 1, parcel_value: 200, total_value: 600, expense_category_id: 'cat-uuid-2', lastParcelMonthNum: 0 },
 ];
 
 describe('AnalyticsService', () => {
@@ -82,8 +82,11 @@ describe('AnalyticsService', () => {
             expect(result.transactions.count).toBe(10);
             expect(result.transactions.by_category[0].salary_ratio).toBe(16.00);
             expect(result.transactions.by_category[0].due_ratio).toBe(53.33);
+            expect(result.transactions.by_category[0].transactions).toHaveLength(1);
+            expect(result.transactions.by_category[0].transactions[0].transaction_id).toBe('tx-1');
             expect(result.transactions.by_category[1].salary_ratio).toBe(8.00);
             expect(result.transactions.by_category[1].due_ratio).toBe(26.67);
+            expect(result.transactions.by_category[1].transactions[0].transaction_id).toBe('tx-2');
             expect(result.purchases.cash.count).toBe(3);
             expect(result.purchases.cash.transactions).toHaveLength(1);
             expect(result.purchases.cash.transactions[0].transaction_id).toBe('tx-1');

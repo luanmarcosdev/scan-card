@@ -194,9 +194,12 @@ const options: swaggerJsdoc.Options = {
             card_id: { type: 'string', format: 'uuid' },
             card_last_numbers: { type: 'string', example: '1234' },
             card_name: { type: 'string', nullable: true, example: 'Nubank' },
+            merchant: { type: 'string', nullable: true, example: 'Amazon' },
+            transaction_date: { type: 'string', format: 'date', nullable: true, example: '2026-04-10' },
             parcels: { type: 'integer', example: 6 },
             current_parcel: { type: 'integer', example: 3 },
             parcel_value: { type: 'number', nullable: true, example: 50.00 },
+            total_value: { type: 'number', example: 300.00 },
           },
         },
         CategoryBreakdown: {
@@ -209,6 +212,7 @@ const options: swaggerJsdoc.Options = {
             avg_value: { type: 'number' },
             salary_ratio: { type: 'number', nullable: true, description: 'Category total as % of salary' },
             due_ratio: { type: 'number', nullable: true, description: 'Category total as % of total_due' },
+            transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
           },
         },
         AnalyticsResponse: {

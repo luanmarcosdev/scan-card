@@ -31,12 +31,16 @@ export interface PurchaseTransactionItem {
     card_id: string;
     card_last_numbers: string;
     card_name: string | null;
+    merchant: string | null;
+    transaction_date: string | null;
     parcels: number;
     current_parcel: number;
     parcel_value: number | null;
+    total_value: number;
 }
 
 export interface PurchaseTransactionRaw extends PurchaseTransactionItem {
+    expense_category_id: string;
     lastParcelMonthNum: number;
 }
 

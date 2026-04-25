@@ -42,7 +42,14 @@ export class AnalyticsService {
 
         const refMonthNum = refYear * 12 + refMonth;
 
-        const toItem = ({ lastParcelMonthNum: _, ...t }: typeof allTransactions[0]) => t;
+        const toItem = ({ lastParcelMonthNum: _, expense_category_id: __, ...t }: typeof allTransactions[0]) => t;
+
+        const txByCategory = new Map<string, typeof allTransactions>();
+        for (const tx of allTransactions) {
+            const group = txByCategory.get(tx.expense_category_id) ?? [];
+            group.push(tx);
+            txByCategory.set(tx.expense_category_id, group);
+        }
 
         const cashTx = allTransactions.filter(t => t.parcels === 1).map(toItem);
         const installmentsTx = allTransactions.filter(t => t.parcels > 1).map(toItem);
@@ -70,6 +77,7 @@ export class AnalyticsService {
                     due_ratio: general.total_due && c.total
                         ? parseFloat(((c.total / general.total_due) * 100).toFixed(2))
                         : null,
+                    transactions: (txByCategory.get(c.category_id) ?? []).map(toItem),
                 })),
             },
             purchases: {

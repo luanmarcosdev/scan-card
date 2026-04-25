@@ -1,3 +1,16 @@
+export interface PurchaseTransactionDto {
+    transaction_id: string;
+    card_id: string;
+    card_last_numbers: string;
+    card_name: string | null;
+    merchant: string | null;
+    transaction_date: string | null;
+    parcels: number;
+    current_parcel: number;
+    parcel_value: number | null;
+    total_value: number;
+}
+
 export interface CategoryBreakdownDto {
     category_id: string;
     category_name: string;
@@ -6,16 +19,7 @@ export interface CategoryBreakdownDto {
     avg_value: number;
     salary_ratio: number | null;
     due_ratio: number | null;
-}
-
-export interface PurchaseTransactionDto {
-    transaction_id: string;
-    card_id: string;
-    card_last_numbers: string;
-    card_name: string | null;
-    parcels: number;
-    current_parcel: number;
-    parcel_value: number | null;
+    transactions: PurchaseTransactionDto[];
 }
 
 export interface PurchaseGroupDto {
