@@ -149,7 +149,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
             transaction_id: r.transaction_id,
             expense_category_id: r.expense_category_id,
             merchant: r.merchant ?? null,
-            transaction_date: r.transaction_date ? String(r.transaction_date).slice(0, 10) : null,
+            transaction_date: r.transaction_date instanceof Date ? r.transaction_date.toISOString().slice(0, 10) : (r.transaction_date ? String(r.transaction_date).slice(0, 10) : null),
             card_id: r.card_id,
             card_last_numbers: r.card_last_numbers,
             card_name: r.card_name,
