@@ -1,5 +1,7 @@
 export interface PurchaseTransactionDto {
     transaction_id: string;
+    expense_category_id: string;
+    expense_category_name: string;
     card_id: string;
     card_last_numbers: string;
     card_name: string | null;

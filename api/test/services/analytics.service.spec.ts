@@ -41,8 +41,8 @@ const mockExpiring: ExpiringMetrics = {
 };
 
 const mockTransactions: PurchaseTransactionRaw[] = [
-    { transaction_id: 'tx-1', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', merchant: 'Amazon', transaction_date: '2026-04-10', parcels: 1, current_parcel: 1, parcel_value: 100, total_value: 100, expense_category_id: 'cat-uuid-1', lastParcelMonthNum: 0 },
-    { transaction_id: 'tx-2', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', merchant: 'Netflix', transaction_date: '2026-04-01', parcels: 3, current_parcel: 1, parcel_value: 200, total_value: 600, expense_category_id: 'cat-uuid-2', lastParcelMonthNum: 0 },
+    { transaction_id: 'tx-1', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', merchant: 'Amazon', transaction_date: '2026-04-10', parcels: 1, current_parcel: 1, parcel_value: 100, total_value: 100, expense_category_id: 'cat-uuid-1', expense_category_name: 'Food', lastParcelMonthNum: 0 },
+    { transaction_id: 'tx-2', card_id: 'card-1', card_last_numbers: '1234', card_name: 'Nubank', merchant: 'Netflix', transaction_date: '2026-04-01', parcels: 3, current_parcel: 1, parcel_value: 200, total_value: 600, expense_category_id: 'cat-uuid-2', expense_category_name: 'Transport', lastParcelMonthNum: 0 },
 ];
 
 describe('AnalyticsService', () => {
@@ -205,7 +205,8 @@ describe('AnalyticsService', () => {
 
             expect(result).toHaveLength(2);
             expect(result[0]).not.toHaveProperty('lastParcelMonthNum');
-            expect(result[0]).not.toHaveProperty('expense_category_id');
+            expect(result[0]).toHaveProperty('expense_category_id');
+            expect(result[0]).toHaveProperty('expense_category_name');
         });
 
         it('should return only cash transactions when type is cash', async () => {

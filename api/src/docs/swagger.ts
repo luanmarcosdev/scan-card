@@ -191,6 +191,8 @@ const options: swaggerJsdoc.Options = {
           type: 'object',
           properties: {
             transaction_id: { type: 'string', format: 'uuid' },
+            expense_category_id: { type: 'string', format: 'uuid' },
+            expense_category_name: { type: 'string', example: 'Food' },
             card_id: { type: 'string', format: 'uuid' },
             card_last_numbers: { type: 'string', example: '1234' },
             card_name: { type: 'string', nullable: true, example: 'Nubank' },

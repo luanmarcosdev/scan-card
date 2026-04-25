@@ -28,6 +28,8 @@ export interface CategoryMetric {
 
 export interface PurchaseTransactionItem {
     transaction_id: string;
+    expense_category_id: string;
+    expense_category_name: string;
     card_id: string;
     card_last_numbers: string;
     card_name: string | null;
@@ -40,7 +42,6 @@ export interface PurchaseTransactionItem {
 }
 
 export interface PurchaseTransactionRaw extends PurchaseTransactionItem {
-    expense_category_id: string;
     lastParcelMonthNum: number;
 }
 

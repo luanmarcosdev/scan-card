@@ -123,6 +123,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
             .select([
                 'ct.id as transaction_id',
                 'ct.expense_category_id as expense_category_id',
+                'ec.category as expense_category_name',
                 'ct.merchant as merchant',
                 'ct.transaction_date as transaction_date',
                 'ct.parcels as parcels',
@@ -137,6 +138,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
             .from('card_transactions', 'ct')
             .innerJoin('card_statements', 'cs', 'ct.card_statement_id = cs.id')
             .innerJoin('cards', 'c', 'cs.card_id = c.id')
+            .innerJoin('expense_categories', 'ec', 'ct.expense_category_id = ec.id')
             .where('ct.user_id = :userId', { userId: filters.userId })
             .andWhere('ct.deleted_at IS NULL')
             .andWhere('cs.deleted_at IS NULL');
@@ -148,6 +150,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
         return results.map(r => ({
             transaction_id: r.transaction_id,
             expense_category_id: r.expense_category_id,
+            expense_category_name: r.expense_category_name,
             merchant: r.merchant ?? null,
             transaction_date: r.transaction_date instanceof Date ? r.transaction_date.toISOString().slice(0, 10) : (r.transaction_date ? String(r.transaction_date).slice(0, 10) : null),
             card_id: r.card_id,

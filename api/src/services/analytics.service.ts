@@ -88,7 +88,7 @@ export class AnalyticsService {
 
         const allTransactions = await this.analyticsRepo.getTransactions(filters);
 
-        const toItem = ({ lastParcelMonthNum: _, expense_category_id: __, ...t }: typeof allTransactions[0]) => t;
+        const toItem = ({ lastParcelMonthNum: _, ...t }: typeof allTransactions[0]) => t;
 
         let filtered = allTransactions;
         if (dto.type === 'cash') filtered = allTransactions.filter(t => t.parcels === 1);
