@@ -187,6 +187,51 @@ const options: swaggerJsdoc.Options = {
             updated_at: { type: 'string', format: 'date-time', nullable: true },
           },
         },
+        CategoryBreakdown: {
+          type: 'object',
+          properties: {
+            category_id: { type: 'string', format: 'uuid' },
+            count: { type: 'integer' },
+            total: { type: 'number' },
+            avg_value: { type: 'number' },
+          },
+        },
+        AnalyticsResponse: {
+          type: 'object',
+          properties: {
+            general: {
+              type: 'object',
+              properties: {
+                salary: { type: 'number', nullable: true },
+                total_installments: { type: 'number', example: 1200.00 },
+                total_due: { type: 'number', example: 1500.00 },
+                installments_salary_ratio: { type: 'number', nullable: true, example: 24.00, description: 'Percentage of salary spent on installments' },
+                statements_needing_review: { type: 'integer', example: 1, description: 'Number of statements with status needs_review' },
+              },
+            },
+            transactions: {
+              type: 'object',
+              properties: {
+                count: { type: 'integer', example: 15 },
+                avg_value: { type: 'number', example: 80.00 },
+                by_category: {
+                  type: 'array',
+                  items: { '$ref': '#/components/schemas/CategoryBreakdown' },
+                },
+              },
+            },
+            purchases: {
+              type: 'object',
+              properties: {
+                cash_count: { type: 'integer', example: 5 },
+                installment_count: { type: 'integer', example: 10 },
+                ends_this_month: { type: 'integer', example: 2 },
+                ends_next_month: { type: 'integer', example: 3 },
+                ends_within_3_months: { type: 'integer', example: 6 },
+              },
+            },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],
