@@ -51,8 +51,6 @@ export class AnalyticsService {
             txByCategory.set(tx.expense_category_id, group);
         }
 
-        const cashTx = allTransactions.filter(t => t.parcels === 1).map(toItem);
-        const installmentsTx = allTransactions.filter(t => t.parcels > 1).map(toItem);
         const endsThisMonthTx = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum).map(toItem);
         const endsNextMonthTx = allTransactions.filter(t => t.lastParcelMonthNum === refMonthNum + 1).map(toItem);
         const endsWithin3MonthsTx = allTransactions.filter(t => t.lastParcelMonthNum >= refMonthNum + 2 && t.lastParcelMonthNum <= refMonthNum + 3).map(toItem);
@@ -81,8 +79,8 @@ export class AnalyticsService {
                 })),
             },
             purchases: {
-                cash: { count: general.cash_count, total: general.cash_total, transactions: cashTx },
-                installments: { count: general.installment_count, total: general.installment_total, transactions: installmentsTx },
+                cash: { count: general.cash_count, total: general.cash_total },
+                installments: { count: general.installment_count, total: general.installment_total },
                 ends_this_month: { ...expiring.ends_this_month, transactions: endsThisMonthTx },
                 ends_next_month: { ...expiring.ends_next_month, transactions: endsNextMonthTx },
                 ends_within_3_months: { ...expiring.ends_within_3_months, transactions: endsWithin3MonthsTx },

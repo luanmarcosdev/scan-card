@@ -25,6 +25,9 @@ export interface CategoryBreakdownDto {
 export interface PurchaseGroupDto {
     count: number;
     total: number;
+}
+
+export interface ExpiringGroupDto extends PurchaseGroupDto {
     transactions: PurchaseTransactionDto[];
 }
 
@@ -45,8 +48,8 @@ export interface AnalyticsResponseDto {
     purchases: {
         cash: PurchaseGroupDto;
         installments: PurchaseGroupDto;
-        ends_this_month: PurchaseGroupDto;
-        ends_next_month: PurchaseGroupDto;
-        ends_within_3_months: PurchaseGroupDto;
+        ends_this_month: ExpiringGroupDto;
+        ends_next_month: ExpiringGroupDto;
+        ends_within_3_months: ExpiringGroupDto;
     };
 }

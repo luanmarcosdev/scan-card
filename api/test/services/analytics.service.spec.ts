@@ -88,11 +88,7 @@ describe('AnalyticsService', () => {
             expect(result.transactions.by_category[1].due_ratio).toBe(26.67);
             expect(result.transactions.by_category[1].transactions[0].transaction_id).toBe('tx-2');
             expect(result.purchases.cash.count).toBe(3);
-            expect(result.purchases.cash.transactions).toHaveLength(1);
-            expect(result.purchases.cash.transactions[0].transaction_id).toBe('tx-1');
             expect(result.purchases.installments.count).toBe(7);
-            expect(result.purchases.installments.transactions).toHaveLength(1);
-            expect(result.purchases.installments.transactions[0].transaction_id).toBe('tx-2');
             expect(result.purchases.ends_this_month.count).toBe(2);
         });
 

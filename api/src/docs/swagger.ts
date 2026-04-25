@@ -248,7 +248,6 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 5 },
                     total: { type: 'number', example: 300.00 },
-                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 installments: {
@@ -256,7 +255,6 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     count: { type: 'integer', example: 10 },
                     total: { type: 'number', example: 900.00 },
-                    transactions: { type: 'array', items: { '$ref': '#/components/schemas/PurchaseTransaction' } },
                   },
                 },
                 ends_this_month: {
