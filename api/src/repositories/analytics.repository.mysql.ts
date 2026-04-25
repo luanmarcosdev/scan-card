@@ -104,7 +104,7 @@ export class AnalyticsRepositoryMySQL implements IAnalyticsRepository {
             .andWhere('cs.deleted_at IS NULL')
             .setParameters({ ref0: refMonthNum, ref1: refMonthNum + 1, ref2: refMonthNum + 2, ref3: refMonthNum + 3 });
 
-        if (filters.cardId) query.andWhere('cs.card_id = :cardId', { cardId: filters.cardId });
+        this.applyPeriodFilters(query, filters);
         if (filters.categoryId) query.andWhere('ct.expense_category_id = :categoryId', { categoryId: filters.categoryId });
 
         const r = await query.getRawOne();
