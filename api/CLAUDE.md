@@ -100,6 +100,17 @@ DEVELOPER_EMAIL, SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
 
 TypeORM `synchronize` is disabled — all schema changes must go through migrations.
 
+**Analytics endpoints** (`src/services/analytics.service.ts`, `src/repositories/analytics.repository.mysql.ts`):
+- `GET /api/analytics` — aggregated metrics for the authenticated user. Filters: `card_id`, `month` (requires `year`), `year`, `category_id`. Returns:
+  - `general`: `salary`, `total_installments`, `total_due`, `installments_salary_ratio`, `statements_count`, `statements_needing_review`
+  - `transactions`: `count`, `avg_value`, `by_category[]` (with `salary_ratio` and `due_ratio` as % of salary/total_due)
+  - `purchases`: `cash`, `installments` (count + total), `ends_this_month`, `ends_next_month`, `ends_within_3_months` (count + total, no transaction lists)
+- `GET /api/analytics/transactions` — transaction detail list. Same filters + `type` (`cash`, `installments`, `ends_this_month`, `ends_next_month`, `ends_within_3_months`; omit for all). Each item includes `expense_category_id` and `expense_category_name`.
+- Repository uses 4 raw QueryBuilder queries (`getGeneralMetrics`, `getByCategory`, `getExpiringPurchases`, `getTransactions`). `getGeneralMetrics` runs two parallel sub-queries (transactions + statements). `getExpiringPurchases` computes `(cs.year_reference * 12 + cs.month_reference + (ct.parcels - ct.current_parcel))` as lastParcelMonthNum.
+- `refMonth` logic: if both `month` and `year` are provided use them; if only `year`, use current month; if neither, use current month and year.
+- `ends_within_3_months` covers months +2 and +3 from reference (excludes this month and next month).
+- Transaction date from MySQL arrives as a `Date` object — formatted with `instanceof Date ? .toISOString().slice(0, 10)`.
+
 ## Testing
 
 Tests live in `/test/` (mirroring `src/` structure) and use `.spec.ts` suffix. Services are unit tested with mocked repositories, cache providers, and storage providers. Path alias `@/` maps to `src/`.
