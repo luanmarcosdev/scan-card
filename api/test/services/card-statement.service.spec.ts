@@ -79,6 +79,7 @@ describe("CardStatementService", () => {
 
         storageProvider = {
             save: jest.fn(),
+            get: jest.fn(),
             delete: jest.fn(),
         };
 
