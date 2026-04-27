@@ -43,7 +43,7 @@ Routes → Controllers → Services → Repositories → Database/Cache
 - **`src/mappers/`** — Entity-to-DTO conversions
 - **`src/errors/`** — Custom error classes (`ErrorBase`, `NotFoundError`, `ConflictError`, `BadRequestError`) caught by the global error middleware
 - **`src/infra/`** — Redis, RabbitMQ, and storage client wrappers
-- **`src/infra/storage/`** — `LocalStorageProvider` implements `IStorageProvider`; saves files to `$UPLOAD_DIR/{userId}/{statementId}/`; swap for MinIO later without changing services
+- **`src/infra/storage/`** — `MinioStorageProvider` implements `IStorageProvider` (`save`, `get`, `delete`) using the MinIO SDK; object keys follow the pattern `{userId}/{statementId}/{filename}`; bucket is auto-created on first upload. `LocalStorageProvider` remains for local/test use.
 - **`src/middlewares/upload.middleware.ts`** — multer with `memoryStorage`; fileFilter accepts only jpg/jpeg/png; max 8 files, 3MB per file; field name is `images` (array). Exports `handleUploadErrors` (4-param Express error middleware) to convert `MulterError` into `UploadError` with descriptive `errors_detail` (`max_size`, `max_files`). Always place `handleUploadErrors` right after `upload.*` in the route chain.
 - **`src/errors/upload.error.ts`** — `UploadError extends ErrorBase` (status 400); accepts optional `errors: Record<string, string>` for detail fields
 - **`src/middlewares/redis-rate-limi.middleware.ts`** — `rateLimit(provider, maxRequests, ttl, keyFn?)`: optional `keyFn` determines the Redis key (default `req.ip`); on 429 returns `errors_detail` with `limit`, `window` (formatted via `formatSeconds`), `retry_after_seconds`
@@ -81,7 +81,7 @@ SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  # Nodemailer SMTP config
 
 **needs_review logic:** compares `statement.total` against `SUM(parcel_value)` extracted from the statement. Tolerance: R$10. If diff > 10 → status `7=needs_review`, otherwise `4=success`.
 
-**uploads volume:** `UPLOAD_DIR=/uploads` is a named Docker volume (`uploads_data`) shared between `api`, `worker-statement-processor-ai`, and `worker-dlq`. Files saved by the API are readable by workers.
+**Object storage:** MinIO runs as a Docker Compose service (`minio-scancard`, port 9000; console on 9001). All services (`api`, `worker-statement-processor-ai`) connect via `MinioStorageProvider` — no shared filesystem volume needed. `OpenAIStatementExtractor` receives `IStorageProvider` via constructor and calls `storageProvider.get(objectKey)` to download images before sending to OpenAI.
 
 **DECIMAL columns:** TypeORM returns MySQL DECIMAL as string by default. Use column `transformer: { to: (v) => v, from: (v) => v !== null ? parseFloat(v) : null }` to get numbers.
 
@@ -89,7 +89,7 @@ SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS  # Nodemailer SMTP config
 ```
 PORT, DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME,
 REDIS_HOST, REDIS_PORT, REDIS_PASS,
-UPLOAD_DIR,
+MINIO_ENDPOINT, MINIO_PORT, MINIO_USE_SSL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, MINIO_BUCKET,
 JWT_SECRET, JWT_EXPIRES_IN,
 OPENAI_API_KEY,
 RABBITMQ_STATEMENT_AI_MAX_RETRIES, RABBITMQ_STATEMENT_AI_RETRY_DELAY,

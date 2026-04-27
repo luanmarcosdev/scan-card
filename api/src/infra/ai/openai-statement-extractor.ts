@@ -1,10 +1,13 @@
 import OpenAI from 'openai';
-import { readFile } from 'fs/promises';
 import { IAiStatementExtractor, AiExtractionResult } from '../../contracts/ai-statement-extractor.interface';
+import { IStorageProvider } from '../../contracts/storage-provider.interface';
 
 export class OpenAIStatementExtractor implements IAiStatementExtractor {
 
-    constructor(private readonly openai: OpenAI) {}
+    constructor(
+        private readonly openai: OpenAI,
+        private readonly storageProvider: IStorageProvider,
+    ) {}
 
     async analyseAndExtractTransactions(params: {
         imagePaths: string[];
@@ -17,7 +20,7 @@ export class OpenAIStatementExtractor implements IAiStatementExtractor {
         // Convert images to base64 and prepare content for OpenAI
         const imageContents: OpenAI.Chat.ChatCompletionContentPartImage[] = await Promise.all(
             imagePaths.map(async (imagePath) => {
-                const buffer = await readFile(imagePath);
+                const buffer = await this.storageProvider.get(imagePath);
                 const base64 = buffer.toString('base64');
                 const ext = imagePath.split('.').pop()?.toLowerCase() ?? 'jpeg';
                 const mime = ext === 'png' ? 'image/png' : 'image/jpeg';

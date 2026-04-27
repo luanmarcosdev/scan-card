@@ -10,6 +10,7 @@ import { ExpenseCategoryRepositoryMySQL } from '../repositories/expense-category
 import { JobRepositoryMySQL } from '../repositories/job.repository.mysql';
 import { AuditLogRepositoryMySQL } from '../repositories/audit-log.repository.mysql';
 import { OpenAIStatementExtractor } from '../infra/ai/openai-statement-extractor';
+import { MinioStorageProvider } from '../infra/storage/minio-storage.provider';
 import { StatementProcessorService } from '../services/statement-processor.service';
 
 const EXCHANGE = 'events';
@@ -32,7 +33,7 @@ async function startWorker() {
         new ExpenseCategoryRepositoryMySQL(),
         jobRepo,
         new AuditLogRepositoryMySQL(),
-        new OpenAIStatementExtractor(new OpenAI({ apiKey: process.env.OPENAI_API_KEY })),
+        new OpenAIStatementExtractor(new OpenAI({ apiKey: process.env.OPENAI_API_KEY }), new MinioStorageProvider()),
     );
 
     consumeFromExchange(

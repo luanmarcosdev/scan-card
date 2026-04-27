@@ -9,7 +9,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-      - uploads_data:/uploads
+    env_file: .env
     command: npm run dev
     depends_on:
       mysql:
@@ -17,6 +17,8 @@ services:
       redis:
         condition: service_started
       rabbitmq:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   mysql:
@@ -66,18 +68,38 @@ services:
       timeout: 5s
       retries: 10
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio-scancard
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minio_user
+      MINIO_ROOT_PASSWORD: minio_pass
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   worker-statement-processor-ai:
     build: .
     env_file: .env
     volumes:
       - .:/app
       - /app/node_modules
-      - uploads_data:/uploads
     command: npm run worker:statement-processor
     depends_on:
       rabbitmq:
         condition: service_healthy
       mysql:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   worker-dlq:
@@ -97,4 +119,4 @@ volumes:
   mysql_data:
   redis_data:
   rabbitmq_data:
-  uploads_data:
+  minio_data:

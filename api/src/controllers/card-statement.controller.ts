@@ -7,7 +7,7 @@ import { CardStatementImageRepositoryMySQL } from "../repositories/card-statemen
 import { CardRepositoryMySQL } from "../repositories/card.repository.mysql";
 import { JobRepositoryMySQL } from "../repositories/job.repository.mysql";
 import { RedisCacheProvider } from "../infra/cache/redis-cache.provider";
-import { LocalStorageProvider } from "../infra/storage/local-storage.provider";
+import { MinioStorageProvider } from "../infra/storage/minio-storage.provider";
 import { CreateCardStatementDto } from "../dtos/card-statement/create-card-statement.dto";
 import { UpdateCardStatementDto } from "../dtos/card-statement/update-card-statement.dto";
 import { CardStatementResponseDto } from "../dtos/card-statement/response-card-statement.dto";
@@ -20,7 +20,7 @@ const service = new CardStatementService(
     new CardStatementRepositoryMySQL(),
     new CardStatementImageRepositoryMySQL(),
     cacheProvider,
-    new LocalStorageProvider(),
+    new MinioStorageProvider(),
     new CardRepositoryMySQL(),
     new JobRepositoryMySQL(),
 );

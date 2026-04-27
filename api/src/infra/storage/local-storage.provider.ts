@@ -1,4 +1,4 @@
-import { mkdir, writeFile, unlink } from 'fs/promises';
+import { mkdir, writeFile, unlink, readFile } from 'fs/promises';
 import { join } from 'path';
 import { IStorageProvider } from '../../contracts/storage-provider.interface';
 
@@ -14,6 +14,10 @@ export class LocalStorageProvider implements IStorageProvider {
         await writeFile(filePath, file.buffer);
 
         return filePath;
+    }
+
+    async get(path: string): Promise<Buffer> {
+        return readFile(path);
     }
 
     async delete(path: string): Promise<void> {
