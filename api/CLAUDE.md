@@ -53,6 +53,8 @@ Routes → Controllers → Services → Repositories → Database/Cache
 - **`src/workers/`** — RabbitMQ consumer processes (separate entry points)
 - **`src/infra/database/`** — TypeORM data source config, entities, and migrations
 
+**Event naming convention:** The broker topology (fire-and-forget) should use event names (past tense, describing what happened) not command names (imperative, describing what to do). Current routing key `statement-ai-process` is a command — the correct name would be `statement-created`. After processing, the worker should publish `statement-processed { statementId, status }` even if no consumer exists yet, enabling future extension (e.g. a notification worker) without touching existing code. This is a known technical debt.
+
 **Worker pattern:** Workers run as separate Docker Compose services. The RabbitMQ consumer (`src/infra/message-broker/consumer.ts`) includes built-in retry logic with configurable max retries + delay, sets `x-last-error` header on each retry, and triggers an optional `onRetry` callback (used to increment `jobs.retries`). Exhausted retries go to the Dead Letter Queue.
 
 **AI abstraction:** `src/contracts/ai-statement-extractor.interface.ts` defines `IAiStatementExtractor` with `analyseAndExtractTransactions()`. The OpenAI implementation lives in `src/infra/ai/openai-statement-extractor.ts`. Business logic is in `src/services/statement-processor.service.ts` — it depends only on the interface, not on OpenAI directly. `AiExtractionResult` uses `valid: boolean` (not exceptions) to signal unparseable responses (e.g. invalid image → status 9).
