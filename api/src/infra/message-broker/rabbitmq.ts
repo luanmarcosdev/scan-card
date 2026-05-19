@@ -18,7 +18,7 @@ export const connectRabbitMQ = async (): Promise<void> => {
     try {
         // modelo de conexao 'amqp://{usuario}:{senha}@{container OU host:porta}'
         // starta a conexao 
-        connection = await amqp.connect(`amqp://${process.env.RABBITMQ_USER || 'rabbit'}:${process.env.RABBITMQ_PASSWORD || 'rabbit'}@${process.env.RABBITMQ_HOST || 'rabbitmq'}`);
+        connection = await amqp.connect(`amqp://${process.env.RABBITMQ_USER || 'rabbit'}:${process.env.RABBITMQ_PASS || 'rabbit'}@${process.env.RABBITMQ_HOST || 'rabbitmq'}`);
         console.log('[INFO]: Connected to RabbitMQ successfully!');
         // cria um canal para enviar e receber mensagens
         channel = await connection.createChannel();
