@@ -3,6 +3,8 @@ import "reflect-metadata"
 import { DataSource } from 'typeorm';
 import { join } from 'path/posix';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const AppDataSource = new DataSource({
   type: 'mysql',
   host: process.env.DB_HOST,
@@ -11,8 +13,8 @@ export const AppDataSource = new DataSource({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
 
-  entities: [join(__dirname, 'entities', '*.ts')],
-  migrations: [join(__dirname, 'migrations', '*.ts')],
+  entities: [join(__dirname, 'entities', isProd ? '*.js' : '*.ts')],
+  migrations: [join(__dirname, 'migrations', isProd ? '*.js' : '*.ts')],
 
   synchronize: false,
   logging: true, 
