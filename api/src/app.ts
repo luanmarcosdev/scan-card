@@ -10,11 +10,15 @@ import cardTransactionRouter from './routes/card-transaction.routes';
 import analyticsRouter from './routes/analytics.routes';
 import { errorHandler } from './middlewares/error-handler.middleware';
 import { notFoundMiddleware } from './middlewares/not-found.middleware';
+import cors from 'cors';
 import { rateLimit } from './middlewares/redis-rate-limi.middleware';
 import { RedisRateLimitProvider } from './infra/cache/redis-rate-limit.provider';
 
 export const app = express();
 
+app.use(cors({
+  origin: ['http://localhost:3039', 'https://scancard.luanmarcosdev.com.br'],
+}));
 app.use(express.json());
 // app.use(rateLimit(new RedisRateLimitProvider(), 5, 120));
 app.use('/api/doc', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
