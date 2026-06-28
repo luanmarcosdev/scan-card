@@ -5,8 +5,8 @@ import { UploadError } from "../errors/upload.error";
 
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png'];
 
-const MAX_FILES = 8;
-const MAX_FILE_SIZE_MB = 3;
+const MAX_FILES = parseInt(process.env.UPLOAD_MAX_FILES ?? '8', 10);
+const MAX_FILE_SIZE_MB = parseInt(process.env.UPLOAD_MAX_FILE_SIZE_MB ?? '3', 10);
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 export const upload = multer({
